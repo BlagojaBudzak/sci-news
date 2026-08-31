@@ -18,7 +18,7 @@ timeout /t 5 /nobreak >nul
 python main.py --categories chemistry >> logs\pipeline.log 2>&1
 
 REM Publish the refreshed digest to GitHub Pages.
-git add site\digests data\digests
+git add site data\digests
 git commit -m "Auto digest update %date% %time%"
 git push origin main
 
