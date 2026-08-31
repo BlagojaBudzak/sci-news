@@ -1,0 +1,9 @@
+# Agentic pipeline
+crewai[litellm]
+
+# Data ingestion
+arxiv>=2.1.3
+chemrxiv>=0.1.2          # optional — only needed for ChemRxiv-backed categories
+
+# Utility
+python-dotenv>=1.0.1

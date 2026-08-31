@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sci News — a weekly digest of new research</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-title">
+      <h1>Sci News</h1>
+      <p class="tagline">Five papers a week, picked and explained by two AI agents reading straight off arXiv and ChemRxiv.</p>
+    </div>
+
+    <div class="field-select">
+      <label for="category-select">Field</label>
+      <select id="category-select">
+        <option value="chemistry">Chemistry</option>
+        <option value="physics">Physics</option>
+        <option value="seismology">Seismology</option>
+      </select>
+    </div>
+  </div>
+</header>
+
+<main class="digest">
+  <div class="digest-meta">
+    <span id="digest-date"></span>
+  </div>
+
+  <div id="digest-list" class="entry-list" aria-live="polite">
+    <!-- entries injected by script.js -->
+  </div>
+</main>
+
+<footer class="site-footer">
+  <p>Generated locally with a 4-bit Llama 3.1 8B running on an RTX 3070, via <a href="https://ollama.ai" target="_blank" rel="noopener">Ollama</a> and <a href="https://github.com/crewAIInc/crewAI" target="_blank" rel="noopener">CrewAI</a>. Source metadata from arXiv and ChemRxiv.</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

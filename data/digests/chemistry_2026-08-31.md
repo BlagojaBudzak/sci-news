@@ -1,0 +1,31 @@
+# Sci News — Chemistry — 2026-08-31
+
+## Model-free Reconstruction of Molecular Energy Levels by Broadband Kilohertz-accurate Cavity-enhanced Spectroscopy
+
+Researchers have developed a new method to reconstruct molecular energy levels without relying on complex models or prior assignments. By analyzing the raw, unassigned transition frequencies of high-resolution molecular spectra, they were able to construct an energy-level network at kilohertz precision using graph theory alone. This breakthrough has the potential to simplify the process of assigning molecular spectra and could lead to new insights into the behavior of complex molecules.
+
+**Read the paper:** [http://arxiv.org/abs/2608.28025v1](http://arxiv.org/abs/2608.28025v1)
+
+## Ionization Energies, Electron Affinities, Bandgaps, Exciton Binding Energies, and Polarization Energies of Orientation-Controlled Picene, [6]-Phenacene, and [7]-Phenacene Thin Films
+
+Phenacenes, a type of chemically robust hydrocarbon, have been studied for their potential applications in organic electronics and superconductivity. However, their electronic properties were not well understood until now. Researchers have used ultraviolet photoelectron spectroscopy and low-energy inverse photoelectron spectroscopy to determine the ionization energies, electron affinities, band gaps, exciton binding energies, and polarization energies of orientation-controlled thin films of picene, [6]-phenacene, and [7]-phenacene. This work provides a more complete understanding of the electronic properties of phenacenes and could lead to new applications in the field.
+
+**Read the paper:** [http://arxiv.org/abs/2608.27890v1](http://arxiv.org/abs/2608.27890v1)
+
+## Resolving Spin-Phonon Relaxation Pathways in Molecular Qubits via Regularized Regression
+
+Molecular qubits, the building blocks of quantum computers, are limited by their coherence time, which is determined by the spin-lattice relaxation pathways. Researchers have developed a new approach to identify these pathways using regularized regression, a machine learning technique. This method, applied to Cu porphyrins spin-1/2 molecular qubits, has shown that the spin-phonon relaxation pathways are more complex than previously thought, with a significant role played by low-frequency vibrational modes. This work could lead to the development of more efficient molecular qubits.
+
+**Read the paper:** [http://arxiv.org/abs/2608.27820v1](http://arxiv.org/abs/2608.27820v1)
+
+## Geometry-Controlled Dynamic Tensiometry Resolves Intrinsic Surfactant Adsorption Kinetics
+
+Surfactant adsorption kinetics play a crucial role in many industrial processes, but their study is often complicated by the influence of experimental geometry. Researchers have developed a new method to resolve the intrinsic surfactant adsorption kinetics using a microfluidic EDGE tensiometer, which provides a nearly stationary interface and controlled micrometer-scale transport. This work has shown that the interfacial tension depends on the mass-transfer conditions, and that a predictive description requires the identification of interfacial thermodynamics, diffusion, and adsorption kinetics separately. This breakthrough could lead to a better understanding of surfactant adsorption kinetics and their applications.
+
+**Read the paper:** [http://arxiv.org/abs/2608.28112v1](http://arxiv.org/abs/2608.28112v1)
+
+## OrbGNN: A Wave function-based Machine Learning Interelectronic Representation
+
+Machine learning interatomic potentials (MLIPs) have become a powerful tool in molecular modeling and computational chemistry. However, they have limitations in predicting electronic properties and the effects of static electron correlation. Researchers have developed a new wave function-based machine learning interelectronic representation, called OrbGNN, which is analogous to molecular graph and MLIP. This work has shown that OrbGNN can accurately predict electronic properties and the effects of static electron correlation, making it a promising tool for molecular modeling and computational chemistry.
+
+**Read the paper:** [http://arxiv.org/abs/2608.27806v1](http://arxiv.org/abs/2608.27806v1)
