@@ -213,7 +213,7 @@ JSON files consumed directly by the website.
 Clone the repository:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/sci-news-aggregator.git
+git clone https://github.com/BlagojaBudzak/sci-news-aggregator.git
 cd sci-news-aggregator
 ```
 
@@ -471,4 +471,4 @@ Built by **Blagoja Budzakoski** while exploring agentic AI, scientific computing
 
 ## 📄 License
 
-Add your preferred license here before publishing the repository.
+This project is released under the MIT License.
