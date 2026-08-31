@@ -1,6 +1,10 @@
-venv/
+scivenv/
 __pycache__/
 *.pyc
-.env
 data/raw/
-logs/*.log
+site/digests/
+.env
+/scivenv/
+
+scivenv/
+scivenv/

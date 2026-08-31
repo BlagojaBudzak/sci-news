@@ -1,9 +1,7 @@
 """
 Data ingestion — no RAG, no vector DB, just two free HTTP APIs.
 
-fetch_papers_for_category() returns a flat list of dicts with a common
-schema regardless of source:
-
+fetch_papers_for_category() returns a flat list of dicts with a common schema:
     {
         "id": str,          # arXiv id or ChemRxiv id — used to re-link
                              # the writer agent's output back to a URL
@@ -21,26 +19,32 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
-
+import requests
 import arxiv
 
-try:
-    import chemrxiv
-    CHEMRXIV_AVAILABLE = True
-except ImportError:
-    # `pip install chemrxiv` is optional — categories with no chemrxiv_terms
-    # configured will still work fine without it.
-    CHEMRXIV_AVAILABLE = False
-
 from config import CATEGORIES, DATA_RAW_DIR, LOOKBACK_DAYS, MAX_PAPERS_PER_SOURCE
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/122.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/json",
+}
 
 
 def _cutoff_date() -> datetime:
     return datetime.now(timezone.utc) - timedelta(days=LOOKBACK_DAYS)
 
 
+def _clean_text(text: str | None) -> str:
+    """Collapse internal whitespace and newlines into single spaces."""
+    return " ".join((text or "").split())
+
+
 def fetch_arxiv(categories: List[str], cutoff: datetime) -> List[Dict]:
-    """Fetch recent papers from one or more arXiv subject classes."""
+    """Fetch recent papers from specified arXiv subject categories."""
     if not categories:
         return []
 
@@ -59,16 +63,12 @@ def fetch_arxiv(categories: List[str], cutoff: datetime) -> List[Dict]:
         if published.tzinfo is None:
             published = published.replace(tzinfo=timezone.utc)
         if published < cutoff:
-            # Results are sorted newest-first, so once we're past the
-            # lookback window everything after is even older — but we keep
-            # iterating rather than breaking, since arXiv occasionally
-            # returns out-of-order pages.
             continue
 
         papers.append({
             "id": result.entry_id.split("/")[-1],
-            "title": result.title.strip().replace("\n", " "),
-            "abstract": result.summary.strip().replace("\n", " "),
+            "title": _clean_text(result.title),
+            "abstract": _clean_text(result.summary),
             "authors": [a.name for a in result.authors],
             "published": published.date().isoformat(),
             "url": result.entry_id,
@@ -78,46 +78,68 @@ def fetch_arxiv(categories: List[str], cutoff: datetime) -> List[Dict]:
     return papers
 
 
-def fetch_chemrxiv(terms: List[str], cutoff: datetime) -> List[Dict]:
-    """Fetch recent papers from ChemRxiv (Cambridge Open Engage API)."""
-    if not terms or not CHEMRXIV_AVAILABLE:
+def fetch_chemrxiv(
+    terms: List[str], cutoff: datetime, max_papers: int = MAX_PAPERS_PER_SOURCE
+) -> List[Dict]:
+    """Fetch recent preprints from ChemRxiv REST API using custom browser headers."""
+    if not terms:
         return []
 
-    client = chemrxiv.Client()
     date_from = cutoff.strftime("%Y-%m-%dT00:00:00.000Z")
-
+    endpoint = "https://chemrxiv.org/engage/chemrxiv/public-api/v1/items"
     papers, seen_ids = [], set()
+
+    session = requests.Session()
+    session.headers.update(HEADERS)
+
     for term in terms:
-        search = chemrxiv.Search(
-            term=term,
-            limit=MAX_PAPERS_PER_SOURCE,
-            sort=chemrxiv.SortCriterion.PUBLISHED_DATE_DESC,
-            search_date_from=date_from,
-        )
+        params = {
+            "term": term,
+            "limit": max_papers,
+            "sort": "PUBLISHED_DATE_DESC",
+            "searchDateFrom": date_from,
+        }
         try:
-            for result in client.results(search):
-                paper_id = getattr(result, "id", None) or result.doi
+            res = session.get(endpoint, params=params, timeout=10)
+            res.raise_for_status()
+            data = res.json()
+
+            for hit in data.get("itemHits", []):
+                item = hit.get("item", {})
+                paper_id = item.get("id") or item.get("doi")
                 if not paper_id or paper_id in seen_ids:
                     continue
                 seen_ids.add(paper_id)
 
+                authors = [
+                    f"{a.get('firstName', '')} {a.get('lastName', '')}".strip()
+                    for a in item.get("authors", [])
+                ]
+
                 papers.append({
                     "id": paper_id,
-                    "title": result.title.strip(),
-                    "abstract": (result.abstract or "").strip(),
-                    "authors": [str(a) for a in result.authors],
-                    "published": str(getattr(result, "published_date", ""))[:10],
-                    "url": f"https://doi.org/{result.doi}" if result.doi else "",
-                    "doi": result.doi or "",
+                    "title": _clean_text(item.get("title")),
+                    "abstract": _clean_text(item.get("abstract")),
+                    "authors": authors,
+                    "published": str(item.get("publishedDate", ""))[:10],
+                    "url": (
+                        f"https://doi.org/{item.get('doi')}"
+                        if item.get("doi")
+                        else f"https://chemrxiv.org/engage/chemrxiv/article-details/{paper_id}"
+                    ),
+                    "doi": item.get("doi") or "",
                     "source": "ChemRxiv",
                 })
         except Exception as e:
-            print(f"  ! ChemRxiv fetch failed ({e}). Falling back to arXiv only.")
+            print(
+                f"  ! ChemRxiv fetch failed for '{term}': {e}. Falling back to arXiv only."
+            )
+
     return papers
 
 
 def fetch_papers_for_category(category: str) -> List[Dict]:
-    """Fetch + cache the raw metadata for one configured category."""
+    """Fetch + cache raw metadata for a single category."""
     if category not in CATEGORIES:
         raise ValueError(f"Unknown category: {category!r}. Add it to config.py.")
 
@@ -128,8 +150,7 @@ def fetch_papers_for_category(category: str) -> List[Dict]:
     papers += fetch_arxiv(cfg.get("arxiv_categories", []), cutoff)
     papers += fetch_chemrxiv(cfg.get("chemrxiv_terms", []), cutoff)
 
-    # Cache the raw fetch so you can re-run the agent step (e.g. after
-    # tweaking a prompt) without re-hitting the APIs.
+    # Cache raw fetch to re-run agent loops without re-hitting external APIs
     raw_path = DATA_RAW_DIR / f"{category}_{datetime.now().strftime('%Y%m%d')}.json"
     raw_path.write_text(json.dumps(papers, indent=2), encoding="utf-8")
 
@@ -137,7 +158,6 @@ def fetch_papers_for_category(category: str) -> List[Dict]:
 
 
 if __name__ == "__main__":
-    # Quick manual check: python -m src.fetcher
     for cat in CATEGORIES:
         found = fetch_papers_for_category(cat)
         print(f"{cat}: {len(found)} papers fetched")

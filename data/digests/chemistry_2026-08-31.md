@@ -1,31 +1,31 @@
 # Sci News — Chemistry — 2026-08-31
 
-## Model-free Reconstruction of Molecular Energy Levels by Broadband Kilohertz-accurate Cavity-enhanced Spectroscopy
+## Unlocking Molecular Energy Levels Without a Model
 
-Researchers have developed a new method to reconstruct molecular energy levels without relying on complex models or prior assignments. By analyzing the raw, unassigned transition frequencies of high-resolution molecular spectra, they were able to construct an energy-level network at kilohertz precision using graph theory alone. This breakthrough has the potential to simplify the process of assigning molecular spectra and could lead to new insights into the behavior of complex molecules.
+Researchers have developed a new method to reconstruct molecular energy levels directly from raw, unassigned transition frequencies. This approach uses graph theory to assemble an energy-level network at kilohertz precision, without requiring a Hamiltonian model or prior assignment. The method was applied to the water absorption spectrum, resulting in 158 energy levels that are mostly two orders of magnitude more precise than the corresponding literature values.
 
 **Read the paper:** [http://arxiv.org/abs/2608.28025v1](http://arxiv.org/abs/2608.28025v1)
 
-## Ionization Energies, Electron Affinities, Bandgaps, Exciton Binding Energies, and Polarization Energies of Orientation-Controlled Picene, [6]-Phenacene, and [7]-Phenacene Thin Films
+## Quantifying Electronic Properties of Phenacene Thin Films
 
-Phenacenes, a type of chemically robust hydrocarbon, have been studied for their potential applications in organic electronics and superconductivity. However, their electronic properties were not well understood until now. Researchers have used ultraviolet photoelectron spectroscopy and low-energy inverse photoelectron spectroscopy to determine the ionization energies, electron affinities, band gaps, exciton binding energies, and polarization energies of orientation-controlled thin films of picene, [6]-phenacene, and [7]-phenacene. This work provides a more complete understanding of the electronic properties of phenacenes and could lead to new applications in the field.
+Scientists have determined the ionization energies, electron affinities, band gaps, exciton binding energies, and polarization energies of orientation-controlled thin films of picene, [6]-phenacene, and [7]-phenacene. The results show that these properties depend only weakly on molecular size, but exhibit large orientation-dependent shifts. The band gaps and exciton binding energies remain nearly independent of molecular size and orientation.
 
 **Read the paper:** [http://arxiv.org/abs/2608.27890v1](http://arxiv.org/abs/2608.27890v1)
 
-## Resolving Spin-Phonon Relaxation Pathways in Molecular Qubits via Regularized Regression
+## Unraveling Spin-Phonon Relaxation Pathways in Molecular Qubits
 
-Molecular qubits, the building blocks of quantum computers, are limited by their coherence time, which is determined by the spin-lattice relaxation pathways. Researchers have developed a new approach to identify these pathways using regularized regression, a machine learning technique. This method, applied to Cu porphyrins spin-1/2 molecular qubits, has shown that the spin-phonon relaxation pathways are more complex than previously thought, with a significant role played by low-frequency vibrational modes. This work could lead to the development of more efficient molecular qubits.
+Researchers have developed an alternative first-principles approach to identify spin-phonon relaxation pathways in molecular qubits. This method uses regularized regression to automate the process without ad hoc mode selection. Applied to Cu porphyrins spin-1/2 molecular qubits, the method successfully reproduces experimental trends in relaxation times and predicts the curvature in the relaxation-vs-temperature profile.
 
 **Read the paper:** [http://arxiv.org/abs/2608.27820v1](http://arxiv.org/abs/2608.27820v1)
 
-## Geometry-Controlled Dynamic Tensiometry Resolves Intrinsic Surfactant Adsorption Kinetics
+## Measuring Surfactant Adsorption Kinetics with Precision
 
-Surfactant adsorption kinetics play a crucial role in many industrial processes, but their study is often complicated by the influence of experimental geometry. Researchers have developed a new method to resolve the intrinsic surfactant adsorption kinetics using a microfluidic EDGE tensiometer, which provides a nearly stationary interface and controlled micrometer-scale transport. This work has shown that the interfacial tension depends on the mass-transfer conditions, and that a predictive description requires the identification of interfacial thermodynamics, diffusion, and adsorption kinetics separately. This breakthrough could lead to a better understanding of surfactant adsorption kinetics and their applications.
+Scientists have developed a microfluidic EDGE tensiometer to measure dynamic interfacial tension with high precision. By combining equilibrium and diffusion measurements, they were able to determine the intrinsic adsorption rate constant of nonionic surfactant C$_{10}$E$_{8}$ and SDS. The results show that the model predicts dynamic interfacial tension beyond the geometry and conditions used to determine them.
 
 **Read the paper:** [http://arxiv.org/abs/2608.28112v1](http://arxiv.org/abs/2608.28112v1)
 
-## OrbGNN: A Wave function-based Machine Learning Interelectronic Representation
+## A Machine Learning Model for Electronic Structure
 
-Machine learning interatomic potentials (MLIPs) have become a powerful tool in molecular modeling and computational chemistry. However, they have limitations in predicting electronic properties and the effects of static electron correlation. Researchers have developed a new wave function-based machine learning interelectronic representation, called OrbGNN, which is analogous to molecular graph and MLIP. This work has shown that OrbGNN can accurately predict electronic properties and the effects of static electron correlation, making it a promising tool for molecular modeling and computational chemistry.
+Researchers have developed a wave function-based machine learning model called OrbGNN, which represents a molecule's orbital landscape and electron correlation patterns. The model is evaluated for the dissociation of nitrogen and for a larger dataset of diatomic molecules. Finally, the OrbGNN model is applied to a set of octahedral iron(II) complexes to predict spin-state energy gaps.
 
 **Read the paper:** [http://arxiv.org/abs/2608.27806v1](http://arxiv.org/abs/2608.27806v1)

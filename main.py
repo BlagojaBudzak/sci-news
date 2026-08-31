@@ -11,7 +11,7 @@ src/crew_setup.py — see that module's docstring for why it's two crews
 and not one):
 
     fetch candidates -> Reviewer picks 5 -> select_papers() narrows the
-    data set -> Writer sees only those 5 -> digest written to disk
+    data set -> Writer sees only those 5 -> hydrate_digest_output() attaches metadata -> digest written to disk
 """
 from __future__ import annotations
 
@@ -24,11 +24,12 @@ from pydantic import BaseModel
 
 from config import CATEGORIES, DATA_DIGEST_DIR, SITE_DIGEST_DIR
 from src.crew_setup import (
-    DigestOutput,
     ReviewerSelection,
+    WriterOutput,
     build_review_crew,
     build_write_crew,
     get_local_llm,
+    hydrate_digest_output,
     select_papers,
 )
 from src.digest_writer import write_digest
@@ -47,8 +48,11 @@ def _parse_output(crew_output, model: Type[ModelT]) -> Optional[ModelT]:
     across both phases since the Reviewer's ids feed straight into
     `select_papers()` and deserve the same safety net.
     """
-    if crew_output.pydantic is not None:
+    # Check if crew_output.pydantic matches the expected model class
+    if isinstance(crew_output.pydantic, model):
         return crew_output.pydantic
+
+    # Fallback: re-parse raw JSON string if pydantic type mismatch or None
     try:
         return model.model_validate(json.loads(crew_output.raw))
     except Exception:  # noqa: BLE001
@@ -82,11 +86,14 @@ def run_for_category(category: str, llm=None) -> None:
     print("[3/4] writer drafting the digest from those papers only ...")
     write_crew = build_write_crew(selected_papers, category, llm=llm)
     write_result = write_crew.kickoff()
-    digest = _parse_output(write_result, DigestOutput)
-    if digest is None:
+    writer_output = _parse_output(write_result, WriterOutput)
+    if writer_output is None:
         print(f"  ! could not parse writer output for {category}")
         print(f"  raw output was:\n{write_result.raw}")
         return
+
+    # Post-process: Hydrate LLM output with raw Python metadata (links & reviewer reasons)
+    digest = hydrate_digest_output(writer_output, selected_papers)
 
     print(f"[4/4] writing digest ({len(digest.entries)} entries) ...")
     write_digest(category, digest.entries, DATA_DIGEST_DIR, SITE_DIGEST_DIR)

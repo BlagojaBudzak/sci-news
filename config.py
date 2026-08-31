@@ -39,12 +39,15 @@ CATEGORIES = {
 # ---------------------------------------------------------------------------
 # Fetch behavior
 # ---------------------------------------------------------------------------
-LOOKBACK_DAYS = 7                 # "papers from the past week"
-MAX_PAPERS_PER_SOURCE = 10        # cap per source -> ~20 candidates/category
+LOOKBACK_DAYS = 7                  # "papers from the past week"
+MAX_PAPERS_PER_SOURCE = 10         # cap per source -> ~20 candidates/category
                                    # reach the Reviewer; the Writer only
                                    # ever sees the 5 it selects (see
                                    # src/crew_setup.py).
-ABSTRACT_TRUNCATE_CHARS = 600     # trims abstracts before they hit the LLM prompt
+# ABSTRACT_TRUNCATE_CHARS = 600    # trims abstracts before they hit the LLM prompt
+REVIEWER_ABSTRACT_CHARS = 800      # enough context for ranking ~10 candidates
+WRITER_ABSTRACT_CHARS = 1400       # more detail for accurate science summaries
+
 
 # ---------------------------------------------------------------------------
 # Local LLM (Ollama) — tuned for an 8GB VRAM card
