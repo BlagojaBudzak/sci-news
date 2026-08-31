@@ -407,7 +407,7 @@ The goal is to understand **how to build a reliable system around an LLM**.
 | JSON generation | ✅ |
 | Local website | ✅ |
 | Category switching | ✅ |
-| GitHub Pages deployment | 🚧 |
+| GitHub Pages deployment | ✅ |
 | Automated weekly publishing | 🚧 |
 | UI redesign | 🚧 |
 
