@@ -1,119 +1,474 @@
-# Sci News
+# 🔬 Sci News
 
-A fully local, zero-API-cost scientific news aggregator. A Python script
-fetches new preprints from arXiv and ChemRxiv, a two-agent CrewAI pipeline
-running on a local Ollama model picks the best 5 and writes them up, and a
-static site displays the result with a field dropdown.
+**A weekly AI-powered science news digest built with CrewAI, Ollama, Python, and vanilla JavaScript.**
 
-## 1. One-time setup
+Sci News automatically collects recent scientific preprints, uses a local LLM to select the most interesting papers, writes accessible summaries, and publishes the results to a lightweight static website.
+
+The project currently covers:
+
+- 🧪 Chemistry
+- ⚛️ Physics
+- 🌎 Seismology
+
+---
+
+## ✨ What does it do?
+
+Every week, Sci News runs a small agentic pipeline:
+
+```text
+              arXiv / ChemRxiv
+                     │
+                     ▼
+              Paper Collection
+                     │
+                     ▼
+            ┌─────────────────┐
+            │  Senior Science │
+            │     Editor      │
+            └────────┬────────┘
+                     │
+             Selects 5 papers
+                     │
+                     ▼
+            Deterministic Python
+               validation
+                     │
+                     ▼
+            ┌─────────────────┐
+            │   Science       │
+            │     Writer      │
+            └────────┬────────┘
+                     │
+             Writes summaries
+                     │
+                     ▼
+            Python validation
+                     │
+                     ▼
+                  JSON
+                     │
+                     ▼
+              Static Website
+```
+
+The important design principle is that **the LLM is not treated as the source of truth**.
+
+The agents make decisions and generate text, while ordinary Python code handles data validation, metadata, filtering, and publishing.
+
+---
+
+## 🧠 Why two agents?
+
+Sci News uses two specialized agents instead of asking one LLM to do everything.
+
+### Senior Science Editor
+
+Reviews the candidate papers and selects the five most interesting based on:
+
+- scientific impact
+- novelty
+- broad interest
+- quality of the available abstract
+
+The reviewer returns structured output containing the paper IDs and selection reasons.
+
+### Science Writer
+
+Receives **only the five papers selected by the reviewer** and produces a short, accessible science-news summary for each.
+
+This creates a simple multi-agent workflow:
+
+```text
+Reviewer
+   ↓
+5 paper IDs
+   ↓
+Python selects the actual papers
+   ↓
+Writer receives only those papers
+```
+
+---
+
+## 🛡️ Keeping the LLM grounded
+
+One of the main goals of the project is to avoid letting the model become the source of truth.
+
+The pipeline uses Pydantic models and regular Python logic to validate the agents' output.
+
+For example, the reviewer may return:
+
+```json
+{
+  "selected_papers": [
+    {
+      "id": "2608.28025v1",
+      "reason": "..."
+    }
+  ]
+}
+```
+
+Python then matches that ID against the real fetched papers.
+
+If an agent invents an ID, it is rejected.
+
+The same principle is used after the Writer finishes:
+
+```text
+LLM output
+    ↓
+paper ID
+    ↓
+Python lookup
+    ↓
+real URL + reviewer reason + metadata
+```
+
+This keeps things such as paper URLs and source metadata outside the LLM's control.
+
+---
+
+## 🧰 Tech Stack
+
+### AI / Agents
+
+- [CrewAI](https://github.com/crewAIInc/crewAI)
+- [Ollama](https://ollama.com/)
+- Llama 3.1 8B
+- Pydantic
+
+### Data
+
+- Python
+- arXiv API
+- ChemRxiv API
+- JSON
+- Markdown
+
+### Frontend
+
+- HTML
+- CSS
+- Vanilla JavaScript
+
+### Deployment
+
+- Git
+- GitHub
+- GitHub Pages
+
+---
+
+## 📁 Project Structure
+
+```text
+sci-news-aggregator/
+│
+├── main.py
+├── config.py
+├── run_pipeline.bat
+├── README.md
+│
+├── src/
+│   ├── crew_setup.py
+│   ├── fetcher.py
+│   └── digest_writer.py
+│
+├── data/
+│   ├── raw/
+│   │   └── ...
+│   │
+│   └── digests/
+│       └── ...
+│
+└── site/
+    ├── index.html
+    ├── script.js
+    ├── style.css
+    │
+    └── digests/
+        ├── chemistry.json
+        ├── physics.json
+        └── seismology.json
+```
+
+### `data/raw/`
+
+Cached paper metadata fetched from the external sources.
+
+### `data/digests/`
+
+Human-readable Markdown versions of generated digests.
+
+### `site/digests/`
+
+JSON files consumed directly by the website.
+
+---
+
+## 🚀 Running locally
+
+Clone the repository:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/sci-news-aggregator.git
+cd sci-news-aggregator
+```
+
+Create and activate the Python environment:
 
 ```powershell
-# from PyCharm's terminal, inside the project folder
-python -m venv venv
-venv\Scripts\activate
+python -m venv scivenv
+scivenv\Scripts\activate
+```
+
+Install the dependencies:
+
+```powershell
 pip install -r requirements.txt
 ```
 
-Install [Ollama for Windows](https://ollama.ai), then pull a 4-bit
-quantized model that fits comfortably in 8GB of VRAM:
+Make sure Ollama is installed and running, then pull the configured model:
 
 ```powershell
 ollama pull llama3.1:8b-instruct-q4_K_M
 ```
 
-Optionally set these two environment variables (System Properties →
-Environment Variables, or in the shell before running Ollama) so Ollama
-never tries to load a second model alongside the first and quietly blow
-past your VRAM budget:
-
-```
-OLLAMA_MAX_LOADED_MODELS=1
-OLLAMA_NUM_PARALLEL=1
-```
-
-## 2. Run it once, by hand
+Run a single category:
 
 ```powershell
 python main.py --categories chemistry
 ```
 
-Watch `nvidia-smi` (or `ollama ps`) in another terminal the first time —
-you should see one model resident in VRAM for the whole run, not spiking
-between agent calls.
-
-## 3. VRAM budget — the actual math
-
-| Component | Approx. size |
-|---|---|
-| Llama 3.1 8B, Q4_K_M weights | ~4.7 GB |
-| KV cache @ `num_ctx=8192` | ~1–1.5 GB |
-| Windows/desktop GPU overhead | ~0.5–1 GB |
-| **Total** | **~6.5–7.2 GB of 8 GB** |
-
-That leaves a thin margin, which is why `config.py` does three things on
-purpose:
-
-1. **One shared `LLM` instance for both agents.** If the Reviewer and
-   Writer pointed at two different models, Ollama would unload one to load
-   the other on every call — slow, and it briefly holds both in memory
-   during the swap.
-2. **`num_ctx=8192`**, not the model's max. Context window directly sets
-   KV-cache VRAM; doubling it roughly doubles that line in the table above.
-3. **Abstracts truncated to `ABSTRACT_TRUNCATE_CHARS` (600 chars)** and
-   `MAX_PAPERS_PER_SOURCE` capped at 20 before they ever reach the prompt,
-   so a busy week doesn't silently overflow the context window.
-
-If you still see VRAM pressure: switch `OLLAMA_MODEL` in `config.py` to
-`"ollama/mistral:7b-instruct-q4_K_M"` (smaller footprint), or drop
-`OLLAMA_NUM_CTX` to `4096` and lower `MAX_PAPERS_PER_SOURCE` to ~12.
-
-## 4. A note on local-model reliability
-
-`output_pydantic` asks the model to return valid, schema-matching JSON.
-GPT-4-class models are very reliable at this; an 8B local model
-occasionally isn't — it might wrap the JSON in a sentence, or in a code
-fence. `main.py` has a fallback that tries to parse `result.raw` if
-`result.pydantic` comes back empty. If a category keeps failing to parse,
-lower `OLLAMA_TEMPERATURE` in `config.py` (0.1–0.2) before touching
-anything else — determinism helps structured output a lot more than
-prompt tweaking does.
-
-## 5. Automate it on Windows
-
-1. Edit `PROJECT_DIR` at the top of `run_pipeline.bat` to your actual path.
-2. Open **Task Scheduler** → *Create Task*.
-3. **Trigger**: Weekly (or daily), whatever cadence you want the digest
-   refreshed.
-4. **Action**: Start a program → Program/script: `run_pipeline.bat`,
-   Start in: your project folder.
-5. Under *Conditions*, uncheck "Start the task only if the computer is on
-   AC power" if this is a laptop.
-6. Run the task once manually from Task Scheduler to confirm it works
-   end-to-end (including the `git push`) before trusting the schedule.
-
-## 6. Deploy to GitHub Pages
+Or run all configured categories:
 
 ```powershell
-git init
-git remote add origin https://github.com/<you>/sci-news-aggregator.git
-git add .
-git commit -m "Initial commit"
-git push -u origin main
+python main.py --categories chemistry physics seismology
 ```
 
-Then in the repo on GitHub: **Settings → Pages → Source**, pick the `main`
-branch and the `/site` folder, save. Your dashboard is now live at
-`https://<you>.github.io/sci-news-aggregator/`, and every scheduled run
-that pushes new JSON into `site/digests/` updates it automatically —
-GitHub Pages needs no rebuild step since it's plain static HTML/JS.
+---
 
-**Vercel alternative:** `vercel --cwd site` (or connect the repo in the
-Vercel dashboard and set the root directory to `site/`) works identically,
-with the advantage of instant cache invalidation on push.
+## 🌐 Running the website locally
 
-## 7. Adding a new field
+The generated frontend is located in `site/`.
 
-Add an entry to `CATEGORIES` in `config.py` with the arXiv category codes
-(see the [arXiv taxonomy](https://arxiv.org/category_taxonomy)) and/or
-ChemRxiv search terms, then add a matching `<option>` to
-`site/index.html`'s `<select>`. Nothing else needs to change.
+Start a simple local web server:
+
+```powershell
+cd site
+python -m http.server 8000
+```
+
+Then open:
+
+```text
+http://localhost:8000
+```
+
+The JavaScript frontend automatically loads the generated JSON files:
+
+```text
+site/digests/chemistry.json
+site/digests/physics.json
+site/digests/seismology.json
+```
+
+No frontend build system is required.
+
+---
+
+## ⚙️ Automated pipeline
+
+The project also includes `run_pipeline.bat` for scheduled execution on Windows.
+
+The intended workflow is:
+
+```text
+Windows Task Scheduler
+        ↓
+run_pipeline.bat
+        ↓
+Ollama
+        ↓
+main.py
+        ↓
+Generate all category digests
+        ↓
+Update site/digests/
+        ↓
+Git commit
+        ↓
+Git push
+        ↓
+GitHub Pages
+```
+
+This allows the site to become a continuously refreshed weekly science publication with minimal manual intervention.
+
+---
+
+## 🔍 Data flow
+
+For each category, the pipeline performs four major steps:
+
+### 1. Fetch
+
+Recent papers are collected from arXiv and, when available, ChemRxiv.
+
+```text
+External APIs
+     ↓
+Candidate papers
+```
+
+### 2. Review
+
+The Senior Science Editor selects the most interesting papers.
+
+```text
+~10–20 candidates
+      ↓
+Reviewer Agent
+      ↓
+5 selected IDs + reasons
+```
+
+### 3. Write
+
+Python resolves those IDs back to the actual papers before constructing the Writer's prompt.
+
+```text
+5 selected IDs
+      ↓
+Python lookup
+      ↓
+5 real papers
+      ↓
+Writer Agent
+      ↓
+5 summaries
+```
+
+### 4. Hydrate & publish
+
+Python combines the generated summaries with trusted metadata:
+
+```text
+LLM title + paragraph
+          +
+real paper URL
+          +
+reviewer reason
+          ↓
+       JSON
+          ↓
+      Website
+```
+
+---
+
+## 🎯 Project goals
+
+This project is primarily a learning project for exploring:
+
+- LLM applications
+- agentic workflows
+- CrewAI
+- local LLM inference
+- structured LLM outputs
+- Pydantic validation
+- API-based data ingestion
+- deterministic code surrounding probabilistic models
+- static website generation
+- automated publishing
+
+The goal is not simply to make an LLM summarize papers.
+
+The goal is to understand **how to build a reliable system around an LLM**.
+
+---
+
+## 🧪 Current status
+
+| Component | Status |
+|---|---|
+| arXiv ingestion | ✅ |
+| ChemRxiv ingestion | ✅ |
+| Paper caching | ✅ |
+| Reviewer agent | ✅ |
+| Reviewer → Python handoff | ✅ |
+| Paper selection validation | ✅ |
+| Writer agent | ✅ |
+| Structured writer output | ✅ |
+| Metadata hydration | ✅ |
+| Markdown digest generation | ✅ |
+| JSON generation | ✅ |
+| Local website | ✅ |
+| Category switching | ✅ |
+| GitHub Pages deployment | 🚧 |
+| Automated weekly publishing | 🚧 |
+| UI redesign | 🚧 |
+
+---
+
+## 🔮 Future ideas
+
+Possible future improvements include:
+
+- Better paper ranking and deduplication
+- More scientific categories
+- More robust handling of API failures
+- Abstract quality checks
+- Automatic word-count validation
+- Search and filtering
+- Paper source badges
+- Publication dates and authors
+- DOI / arXiv metadata
+- Visualizations and scientific figures
+- Improved mobile UI
+- Automated weekly deployment
+- Email or RSS digests
+
+---
+
+## 📌 Philosophy
+
+Sci News deliberately keeps the architecture simple.
+
+Instead of hiding everything behind a framework, the project separates responsibilities:
+
+```text
+Python
+→ data + orchestration + validation
+
+CrewAI
+→ agent behavior
+
+Ollama
+→ local LLM inference
+
+JSON
+→ frontend data layer
+
+JavaScript
+→ rendering
+
+HTML/CSS
+→ presentation
+```
+
+The result is a small system where every step can be inspected, tested, and understood.
+
+---
+
+## 👤 Author
+
+Built by **Blagoja Budzakoski** while exploring agentic AI, scientific computing, and the intersection of chemistry and machine learning.
+
+---
+
+## 📄 License
+
+Add your preferred license here before publishing the repository.
