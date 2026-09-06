@@ -174,13 +174,21 @@ sci-news-aggregator/
 ├── src/
 │   ├── crew_setup.py
 │   ├── fetcher.py
-│   └── digest_writer.py
+│   ├── digest_writer.py
+│   └── trace.py
+│
+├── tests/
+│   ├── test_pipeline_logic.py
+│   └── test_pipeline_smoke.py
 │
 ├── data/
 │   ├── raw/
 │   │   └── ...
 │   │
-│   └── digests/
+│   ├── digests/
+│   │   └── ...
+│   │
+│   └── traces/
 │       └── ...
 │
 └── site/
@@ -201,6 +209,10 @@ Cached paper metadata fetched from the external sources.
 ### `data/digests/`
 
 Human-readable Markdown versions of generated digests.
+
+### `data/traces/`
+
+One JSON file per pipeline run, recording what happened at each stage — see [Observability](#-observability) below. Not committed to the public site; these are debugging artifacts for the developer.
 
 ### `site/digests/`
 
@@ -246,6 +258,17 @@ Or run all configured categories:
 
 ```powershell
 python main.py --categories chemistry physics seismology
+```
+
+---
+
+## ✅ Running the tests
+
+The tests cover the pure-Python logic (id matching, metadata hydration, the trace) with the LLM/network calls faked out — they run in under a second and don't touch arXiv, ChemRxiv, or Ollama.
+
+```powershell
+pip install -r requirements-dev.txt
+python -m pytest tests/ -v
 ```
 
 ---
@@ -369,6 +392,32 @@ reviewer reason
 
 ---
 
+## 🔍 Observability
+
+Every run of `main.py` produces a trace: a per-stage record of what happened, printed to the console and saved as JSON under `data/traces/`.
+
+```text
+JOB #20260906-125536  (chemistry)
+
+FETCH
+  20 papers found  (3.4s)
+
+REVIEWER
+  5 selected  (14.2s)
+
+WRITER
+  5 articles written  (18.9s)
+
+PUBLISH
+  5 entries published  (0.0s)
+```
+
+If a stage fails — the reviewer's output doesn't parse, the writer references an id that doesn't exist — the trace records which stage failed, why, and how long it ran before failing, instead of the run just disappearing into console scrollback. This is what makes it possible to say "the reviewer failed on job 20260906-125536" instead of "something went wrong somewhere."
+
+See `src/trace.py` for the implementation, and `tests/test_pipeline_smoke.py` for an example run with the LLM calls faked out.
+
+---
+
 ## 🎯 Project goals
 
 This project is primarily a learning project for exploring:
@@ -405,9 +454,13 @@ The goal is to understand **how to build a reliable system around an LLM**.
 | Metadata hydration | ✅ |
 | Markdown digest generation | ✅ |
 | JSON generation | ✅ |
+| Author / date / source metadata in JSON | ✅ |
+| Per-run observability trace | ✅ |
 | Local website | ✅ |
 | Category switching | ✅ |
 | GitHub Pages deployment | ✅ |
+| Deterministic pre-filtering (before the Reviewer sees candidates) | 🚧 |
+| Fact-checking stage | 🚧 |
 | Automated weekly publishing | 🚧 |
 | UI redesign | 🚧 |
 

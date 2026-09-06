@@ -74,6 +74,7 @@ OLLAMA_TEMPERATURE = 0.2          # lower = more reliable JSON from output_pydan
 DATA_RAW_DIR = ROOT / "data" / "raw"          # cached raw API responses (debugging)
 DATA_DIGEST_DIR = ROOT / "data" / "digests"   # markdown archive, one file per run
 SITE_DIGEST_DIR = ROOT / "site" / "digests"   # JSON consumed by the static site
+DATA_TRACE_DIR = ROOT / "data" / "traces"     # per-run observability traces (debugging)
 
-for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR):
+for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR, DATA_TRACE_DIR):
     _d.mkdir(parents=True, exist_ok=True)

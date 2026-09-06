@@ -1,0 +1,2 @@
+# Dev-only dependencies — not needed to run the pipeline, only to run tests.
+pytest>=8.0

@@ -22,6 +22,8 @@ def write_digest(
     site_digest_dir: Path,
 ) -> None:
     date_str = datetime.now().strftime("%Y-%m-%d")
+    data_digest_dir.mkdir(parents=True, exist_ok=True)
+    site_digest_dir.mkdir(parents=True, exist_ok=True)
 
     # --- Markdown archive -------------------------------------------------
     md_lines = [f"# Sci News — {category.title()} — {date_str}\n"]

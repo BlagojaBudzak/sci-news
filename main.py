@@ -22,7 +22,7 @@ from typing import Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-from config import CATEGORIES, DATA_DIGEST_DIR, SITE_DIGEST_DIR
+from config import CATEGORIES, DATA_DIGEST_DIR, DATA_TRACE_DIR, SITE_DIGEST_DIR
 from src.crew_setup import (
     ReviewerSelection,
     WriterOutput,
@@ -34,6 +34,7 @@ from src.crew_setup import (
 )
 from src.digest_writer import write_digest
 from src.fetcher import fetch_papers_for_category
+from src.trace import PipelineTrace
 
 ModelT = TypeVar("ModelT", bound=BaseModel)
 
@@ -60,43 +61,84 @@ def _parse_output(crew_output, model: Type[ModelT]) -> Optional[ModelT]:
 
 
 def run_for_category(category: str, llm=None) -> None:
-    print(f"\n=== {category} ===")
+    trace = PipelineTrace.start(category)
+
+    def finish() -> None:
+        trace.print_summary()
+        path = trace.save(DATA_TRACE_DIR)
+        print(f"  trace written to {path}")
+
+    print(f"\n=== {category} ===  (job #{trace.job_id})")
+
     print("[1/4] fetching papers ...")
-    papers = fetch_papers_for_category(category)
+    with trace.stage("fetch") as s:
+        papers = fetch_papers_for_category(category)
+        s.count_out = len(papers)
+        s.count_label = "papers found"
+
     if not papers:
         print(f"  no new {category} papers in the lookback window — skipping")
+        trace.stages[-1].notes.append("lookback window empty")
+        finish()
         return
     print(f"  fetched {len(papers)} candidate papers")
 
     print("[2/4] reviewer selecting the top 5 ...")
-    review_crew = build_review_crew(papers, category, llm=llm)
-    review_result = review_crew.kickoff()
-    selection = _parse_output(review_result, ReviewerSelection)
-    if selection is None:
-        print(f"  ! could not parse reviewer output for {category}")
-        print(f"  raw output was:\n{review_result.raw}")
-        return
+    selected_papers = []
+    with trace.stage("reviewer", count_in=len(papers)) as s:
+        review_crew = build_review_crew(papers, category, llm=llm)
+        review_result = review_crew.kickoff()
+        selection = _parse_output(review_result, ReviewerSelection)
+        if selection is None:
+            s.status = "failed"
+            s.error = "reviewer output did not parse as ReviewerSelection"
+            print(f"  ! could not parse reviewer output for {category}")
+            print(f"  raw output was:\n{review_result.raw}")
+            finish()
+            return
 
-    selected_papers = select_papers(papers, selection)
+        selected_papers = select_papers(papers, selection)
+        s.count_out = len(selected_papers)
+        s.count_label = "selected"
+        dropped = len(selection.selected_papers) - len(selected_papers)
+        if dropped:
+            s.notes.append(f"{dropped} pick(s) referenced an id not in the candidate set")
+
     if not selected_papers:
         print(f"  ! none of the reviewer's picks matched a fetched paper for {category}")
+        finish()
         return
     print(f"  reviewer selected {len(selected_papers)} papers")
 
     print("[3/4] writer drafting the digest from those papers only ...")
-    write_crew = build_write_crew(selected_papers, category, llm=llm)
-    write_result = write_crew.kickoff()
-    writer_output = _parse_output(write_result, WriterOutput)
-    if writer_output is None:
-        print(f"  ! could not parse writer output for {category}")
-        print(f"  raw output was:\n{write_result.raw}")
-        return
+    digest = None
+    with trace.stage("writer", count_in=len(selected_papers)) as s:
+        write_crew = build_write_crew(selected_papers, category, llm=llm)
+        write_result = write_crew.kickoff()
+        writer_output = _parse_output(write_result, WriterOutput)
+        if writer_output is None:
+            s.status = "failed"
+            s.error = "writer output did not parse as WriterOutput"
+            print(f"  ! could not parse writer output for {category}")
+            print(f"  raw output was:\n{write_result.raw}")
+            finish()
+            return
 
-    # Post-process: Hydrate LLM output with raw Python metadata (links & reviewer reasons)
-    digest = hydrate_digest_output(writer_output, selected_papers)
+        # Post-process: Hydrate LLM output with raw Python metadata (links & reviewer reasons)
+        digest = hydrate_digest_output(writer_output, selected_papers)
+        s.count_out = len(digest.entries)
+        s.count_label = "articles written"
+        missing = len(selected_papers) - len(digest.entries)
+        if missing:
+            s.notes.append(f"{missing} draft(s) referenced an id Python couldn't match back")
 
     print(f"[4/4] writing digest ({len(digest.entries)} entries) ...")
-    write_digest(category, digest.entries, DATA_DIGEST_DIR, SITE_DIGEST_DIR)
+    with trace.stage("publish", count_in=len(digest.entries)) as s:
+        write_digest(category, digest.entries, DATA_DIGEST_DIR, SITE_DIGEST_DIR)
+        s.count_out = len(digest.entries)
+        s.count_label = "entries published"
+
+    finish()
 
 
 def main() -> None:
