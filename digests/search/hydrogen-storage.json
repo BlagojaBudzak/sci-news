@@ -1,0 +1,95 @@
+{
+  "category": "hydrogen-storage",
+  "date": "2026-09-07",
+  "entries": [
+    {
+      "id": "openalex:W7207717202",
+      "reason": "This paper systematically evaluates the hydrogen storage performance of TM@g-C3N4 composites anchored with 27 transition metals, identifying five candidates with high-capacity reversible hydrogen storage, including Ti@g-C3N4 with a theoretical maximum gravimetric density of 9.38 wt %.",
+      "title": "Titanium-Decorated Graphene-Like Carbon Nitride for Hydrogen Storage",
+      "paragraph": "Researchers used computational methods to evaluate the hydrogen storage performance of transition-metal-decorated graphene-like carbon nitride (g-C3N4) composites. They identified five promising candidates, with titanium (Ti) decorated g-C3N4 showing the best performance, storing up to 9.38 wt% hydrogen. The study suggests that Ti@g-C3N4 could be a viable material for reversible hydrogen storage applications.",
+      "link": "https://doi.org/10.1021/acsaem.6c02745",
+      "authors": [
+        "Ya-nan Jiang",
+        "Yuchen Ma"
+      ],
+      "published": "2026-09-02",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1021/acsaem.6c02745"
+    },
+    {
+      "id": "openalex:W7204265071",
+      "reason": "This study demonstrates high-capacity reversible hydrogen storage on calcium-decorated silicene, with a hydrogen storage capacity of 7.5 wt% and complete H2 release at approximately 380 K.",
+      "title": "Calcium-Decorated Silicene for High-Capacity Hydrogen Storage",
+      "paragraph": "A team of researchers used first-principles calculations to investigate the hydrogen storage behavior of calcium-decorated silicene. They found that a single calcium atom can bind to the hollow site of the silicene monolayer, enhancing the binding affinity to hydrogen molecules. The study suggests that calcium-decorated silicene could store up to 7.5 wt% hydrogen and release it completely at approximately 380 K.",
+      "link": "https://doi.org/10.3390/nano16171060",
+      "authors": [
+        "Na Xiong",
+        "Ying Zhang",
+        "Lun Tan",
+        "Gui Lei",
+        "Shulin Yang",
+        "Zhigao Lan"
+      ],
+      "published": "2026-08-26",
+      "source": "openalex",
+      "doi": "https://doi.org/10.3390/nano16171060"
+    },
+    {
+      "id": "openalex:W7202039832",
+      "reason": "This research explores the use of carbon dioxide as a cushion gas to optimize hydrogen geostorage, achieving high recovery rates while minimizing water production.",
+      "title": "Using Carbon Dioxide as a Cushion Gas for Hydrogen Geostorage",
+      "paragraph": "Researchers explored the use of carbon dioxide (CO2) as a cushion gas in underground hydrogen storage. They developed a three-dimensional reservoir model to simulate the behavior of hydrogen and CO2 in an artificial aquifer. The study found that the CO2 cushion gas can establish a protection zone at the front of the hydrogen plume, enhancing injection and production efficiency.",
+      "link": "https://doi.org/10.2118/234955-ms",
+      "authors": [
+        "V. Murugan",
+        "A. H. Abbas",
+        "M. H. Mahamad",
+        "K. Z. I. Khairul Nuhairi",
+        "J. R. Gbonhinbor",
+        "A. Agi"
+      ],
+      "published": "2026-08-10",
+      "source": "openalex",
+      "doi": "https://doi.org/10.2118/234955-ms"
+    },
+    {
+      "id": "openalex:W7204481437",
+      "reason": "This study investigates the solid-state hydrogen storage capacity of A2SnH6 (A = Li, Na, K) double perovskite hydrides, finding that the substitution of Li with Na and K leads to an increase in lattice parameters and a decrease in gravimetric hydrogen storage capacities.",
+      "title": "Double Perovskite Hydrides for Energy Conversion Applications",
+      "paragraph": "A team of researchers investigated the solid-state hydrogen storage capacity of A2SnH6 (A = Li, Na, K) double perovskite hydrides. They found that the substitution of lithium with sodium and potassium leads to an increase in lattice parameters, but a decrease in gravimetric hydrogen storage capacities. The study suggests that Na2SnH6 emerges as the most promising candidate for meeting the U.S. DOE hydrogen storage targets.",
+      "link": "https://doi.org/10.1038/s41598-026-66823-4",
+      "authors": [
+        "Usman Saeed",
+        "Ghulam M. Mustafa",
+        "N. A. Noor",
+        "Sikandar Azam",
+        "Hosam O. Elansary",
+        "Arslan Zulfiqar",
+        "Rabia Iqbal"
+      ],
+      "published": "2026-08-27",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1038/s41598-026-66823-4"
+    },
+    {
+      "id": "openalex:W7203660450",
+      "reason": "This research demonstrates high-efficient and reversible hydrogen storage of Sun-graphyne monolayers near room temperature by charge modulation, with a hydrogen storage capacity of 14.3 wt% and a high physisorption of H2.",
+      "title": "High-Efficient and Reversible Hydrogen Storage in Sun-Graphyne Monolayers",
+      "paragraph": "Researchers used first-principles calculations to investigate the structural, electronic, and hydrogen storage performance of pure and charge-modulated Sun-graphyne (SGY) monolayers. They found that the negatively charged SGY monolayer is energetically and thermodynamically stable, with an increased average adsorption energy of 0.224 eV for H2 adsorption. The study suggests that the effective hydrogen storage capacity maintains a high amount of 12.1-14.1 wt% at practical conditions.",
+      "link": "https://doi.org/10.1021/acs.langmuir.6c02574",
+      "authors": [
+        "Zhiyong Liu",
+        "Ying Li",
+        "Wentao Guo",
+        "Xinxin Wang",
+        "Xinli Li",
+        "Xiao‐Hong Li",
+        "Qiang Yue",
+        "Yongliang Yong"
+      ],
+      "published": "2026-08-18",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1021/acs.langmuir.6c02574"
+    }
+  ]
+}
