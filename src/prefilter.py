@@ -1,4 +1,12 @@
-"""Deterministic candidate-paper filtering and ranking."""
+"""Deterministic candidate-paper filtering and ranking.
+
+This module intentionally contains no LLM calls. It removes duplicates,
+rejects unusable abstracts, scores topical relevance from category-specific
+configuration, adds a small recency component, and returns a ranked list.
+
+The input/output schema matches ``src.fetcher.fetch_papers_for_category`` so
+it can sit directly between FETCH and the existing Reviewer phase.
+"""
 from __future__ import annotations
 
 import re
@@ -9,6 +17,8 @@ from typing import Any, Iterable, Mapping, Sequence
 
 @dataclass(frozen=True)
 class PrefilterConfig:
+    """Configuration for one scientific category."""
+
     positive_keywords: Mapping[str, float] = field(default_factory=dict)
     negative_keywords: Mapping[str, float] = field(default_factory=dict)
     min_abstract_chars: int = 80
@@ -21,6 +31,8 @@ class PrefilterConfig:
 
 @dataclass(frozen=True)
 class FilteredPaper:
+    """A ranked paper plus deterministic scoring/debug metadata."""
+
     paper: dict[str, Any]
     score: float
     relevance_score: float
@@ -32,6 +44,8 @@ class FilteredPaper:
 
 @dataclass(frozen=True)
 class PrefilterResult:
+    """Complete result of a deterministic pre-filter run."""
+
     candidates: list[dict[str, Any]]
     details: list[FilteredPaper]
     input_count: int
@@ -42,14 +56,19 @@ class PrefilterResult:
     filtered_examples: list[dict[str, Any]]
 
 
+_WORD_RE = re.compile(r"\b[\wÀ-ÖØ-öø-ÿ]+(?:[-'][\wÀ-ÖØ-öø-ÿ]+)*\b", re.UNICODE)
+
+
 def _normalize(text: Any) -> str:
     return " ".join(str(text or "").split()).strip().lower()
 
 
 def _normalize_identifier(value: Any) -> str:
-    text = _normalize(value).rstrip("/")
+    text = _normalize(value)
     if not text:
         return ""
+
+    text = text.rstrip("/")
     text = re.sub(r"^https?://(dx\.)?doi\.org/", "", text)
     text = re.sub(r"^doi:\s*", "", text)
     text = text.replace("https://arxiv.org/abs/", "")
@@ -58,7 +77,8 @@ def _normalize_identifier(value: Any) -> str:
 
 
 def stable_identifiers(paper: Mapping[str, Any]) -> tuple[str, ...]:
-    values = []
+    """Return normalized DOI, URL, and source-ID values for deduplication."""
+    values: list[str] = []
     for key in ("doi", "url", "id"):
         normalized = _normalize_identifier(paper.get(key))
         if normalized:
@@ -68,10 +88,13 @@ def stable_identifiers(paper: Mapping[str, Any]) -> tuple[str, ...]:
 
 def _phrase_matches(text: str, phrases: Iterable[str]) -> list[str]:
     normalized = _normalize(text)
-    matches = []
+    matches: list[str] = []
     for phrase in phrases:
         p = _normalize(phrase)
-        if p and re.search(rf"(?<!\w){re.escape(p)}(?!\w)", normalized):
+        if not p:
+            continue
+        pattern = rf"(?<!\w){re.escape(p)}(?!\w)"
+        if re.search(pattern, normalized):
             matches.append(phrase)
     return matches
 
@@ -83,63 +106,99 @@ def _recency_score(published: Any, today: date, half_life_days: float) -> float:
         published_date = date.fromisoformat(str(published)[:10])
     except (TypeError, ValueError):
         return 0.0
+
     age_days = max((today - published_date).days, 0)
-    return 0.5 ** (age_days / max(float(half_life_days), 0.0001))
+    half_life = max(float(half_life_days), 0.0001)
+    return 0.5 ** (age_days / half_life)
 
 
-def _score_paper(paper: Mapping[str, Any], config: PrefilterConfig, today: date) -> FilteredPaper | None:
+def _score_paper(
+    paper: Mapping[str, Any],
+    config: PrefilterConfig,
+    today: date,
+) -> FilteredPaper | None:
     title = str(paper.get("title") or "")
     abstract = str(paper.get("abstract") or "").strip()
     if len(abstract) < config.min_abstract_chars:
         return None
 
-    positive_matches = _phrase_matches(f"{title} {abstract}", config.positive_keywords)
-    negative_matches = _phrase_matches(f"{title} {abstract}", config.negative_keywords)
-    relevance_score = (
-        sum(float(config.positive_keywords[item]) for item in positive_matches)
-        - sum(float(config.negative_keywords[item]) for item in negative_matches)
-    )
-    recency_score = _recency_score(paper.get("published"), today, config.recency_half_life_days)
-    total = config.relevance_weight * relevance_score + config.recency_weight * recency_score
+    searchable = f"{title} {abstract}"
+    positive_matches = _phrase_matches(searchable, config.positive_keywords)
+    negative_matches = _phrase_matches(searchable, config.negative_keywords)
 
-    reasons = []
+    positive_score = sum(float(config.positive_keywords[item]) for item in positive_matches)
+    negative_score = sum(float(config.negative_keywords[item]) for item in negative_matches)
+    relevance_score = positive_score - negative_score
+
+    recency = _recency_score(
+        paper.get("published"),
+        today=today,
+        half_life_days=config.recency_half_life_days,
+    )
+    total = (
+        config.relevance_weight * relevance_score
+        + config.recency_weight * recency
+    )
+
+    reasons: list[str] = []
     if positive_matches:
         reasons.append(f"positive matches: {', '.join(positive_matches)}")
     if negative_matches:
         reasons.append(f"negative matches: {', '.join(negative_matches)}")
-    reasons.append(f"recency score: {recency_score:.3f}")
+    reasons.append(f"recency score: {recency:.3f}")
 
     return FilteredPaper(
         paper=dict(paper),
         score=total,
         relevance_score=relevance_score,
-        recency_score=recency_score,
+        recency_score=recency,
         positive_matches=tuple(positive_matches),
         negative_matches=tuple(negative_matches),
         reasons=tuple(reasons),
     )
 
 
-def _deduplicate(papers: Sequence[Mapping[str, Any]]):
+def _deduplicate(
+    papers: Sequence[Mapping[str, Any]],
+) -> tuple[list[Mapping[str, Any]], int, list[dict[str, Any]]]:
     seen: set[str] = set()
-    unique = []
-    examples = []
+    unique: list[Mapping[str, Any]] = []
+    examples: list[dict[str, Any]] = []
+
     for paper in papers:
         identifiers = stable_identifiers(paper)
         duplicate_key = next((identifier for identifier in identifiers if identifier in seen), None)
         if duplicate_key:
             if len(examples) < 10:
-                examples.append({"id": paper.get("id", ""), "title": paper.get("title", ""), "reason": f"duplicate identifier: {duplicate_key}"})
+                examples.append({
+                    "id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "reason": f"duplicate identifier: {duplicate_key}",
+                })
             continue
         seen.update(identifiers)
         unique.append(paper)
+
     return unique, len(papers) - len(unique), examples
 
 
-def filter_papers(papers: Sequence[Mapping[str, Any]], config: PrefilterConfig, *, today: date | None = None) -> PrefilterResult:
+def filter_papers(
+    papers: Sequence[Mapping[str, Any]],
+    config: PrefilterConfig,
+    *,
+    today: date | None = None,
+) -> PrefilterResult:
+    """Filter and rank papers deterministically.
+
+    Ordering is stable: higher total score first, then higher relevance,
+    then the original input order. No randomness or model inference is used.
+    """
     today = today or datetime.now(timezone.utc).date()
+    input_count = len(papers)
+
     unique, duplicate_count, duplicate_examples = _deduplicate(papers)
-    ranked = []
+
+    ranked: list[tuple[int, FilteredPaper]] = []
     filtered_examples = list(duplicate_examples)
     missing_abstract_count = 0
     low_relevance_count = 0
@@ -149,30 +208,52 @@ def filter_papers(papers: Sequence[Mapping[str, Any]], config: PrefilterConfig, 
         if len(abstract) < config.min_abstract_chars:
             missing_abstract_count += 1
             if len(filtered_examples) < 10:
-                filtered_examples.append({"id": paper.get("id", ""), "title": paper.get("title", ""), "reason": "missing/very short abstract"})
+                filtered_examples.append({
+                    "id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "reason": "missing/very short abstract",
+                })
             continue
 
         scored = _score_paper(paper, config, today)
         assert scored is not None
+
         if config.positive_match_required and not scored.positive_matches:
             low_relevance_count += 1
             if len(filtered_examples) < 10:
-                filtered_examples.append({"id": paper.get("id", ""), "title": paper.get("title", ""), "reason": "no configured positive topical matches"})
+                filtered_examples.append({
+                    "id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "reason": "no configured positive topical matches",
+                })
             continue
+
         if scored.relevance_score < config.min_relevance_score:
             low_relevance_count += 1
             if len(filtered_examples) < 10:
-                filtered_examples.append({"id": paper.get("id", ""), "title": paper.get("title", ""), "reason": f"relevance score {scored.relevance_score:.2f} below threshold {config.min_relevance_score:.2f}"})
+                filtered_examples.append({
+                    "id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "reason": (
+                        f"relevance score {scored.relevance_score:.2f} "
+                        f"below threshold {config.min_relevance_score:.2f}"
+                    ),
+                })
             continue
+
         ranked.append((index, scored))
 
-    ranked.sort(key=lambda item: (-item[1].score, -item[1].relevance_score, item[0]))
+    ranked.sort(
+        key=lambda item: (-item[1].score, -item[1].relevance_score, item[0])
+    )
     details = [item[1] for item in ranked]
+    candidates = [detail.paper for detail in details]
+
     return PrefilterResult(
-        candidates=[detail.paper for detail in details],
+        candidates=candidates,
         details=details,
-        input_count=len(papers),
-        output_count=len(details),
+        input_count=input_count,
+        output_count=len(candidates),
         duplicate_count=duplicate_count,
         missing_abstract_count=missing_abstract_count,
         low_relevance_count=low_relevance_count,
