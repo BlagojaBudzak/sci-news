@@ -1,0 +1,79 @@
+{
+  "category": "chemistry",
+  "date": "2026-09-06",
+  "entries": [
+    {
+      "id": "2609.03168v1",
+      "reason": "This paper presents a novel approach to efficiently evaluate the exchange contribution of Laplace-transformed MP2, which is the source of O(N^5) scaling in the formulation, and has an O(N^3) deterministic setup cost and an O(N^2) stochastic cost at fixed absolute error.",
+      "title": "Speeding Up a Powerful Chemistry Tool",
+      "paragraph": "Researchers have improved a widely used chemistry method called MP2, which helps predict the behavior of molecules. They used a technique called stochastic tensor contraction to speed up the calculations, making it possible to apply MP2 to larger systems. The new method has a lower computational cost and can be used to study the properties of molecules with thousands of atoms.",
+      "link": "http://arxiv.org/abs/2609.03168v1",
+      "authors": [
+        "Jiace Sun",
+        "Garnet Kin-Lic Chan"
+      ],
+      "published": "2026-09-02",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.03168v1"
+    },
+    {
+      "id": "2609.04029v1",
+      "reason": "This paper presents a computational modeling framework for predicting nanoparticle property distributions by coupling processing conditions, early-stage self-assembly physics, and molecular chemical details with kinetic Monte Carlo (kMC) simulations.",
+      "title": "Predicting the Properties of Nanoparticles",
+      "paragraph": "Scientists have developed a computational model to predict the properties of multicomponent nanoparticles. The model takes into account the processing conditions, self-assembly physics, and molecular chemical details to simulate the behavior of individual particles. The researchers applied the model to mRNA lipid nanoparticles and PEI-DNA polyelectrolytic complexation, demonstrating its ability to predict size-loading correlations and single-particle-resolved DNA-PEI stoichiometry distributions.",
+      "link": "http://arxiv.org/abs/2609.04029v1",
+      "authors": [
+        "Turash Haque Pial",
+        "Tine Curk"
+      ],
+      "published": "2026-09-03",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.04029v1"
+    },
+    {
+      "id": "2609.02762v1",
+      "reason": "This paper develops a dilute solution theory (DST) for the influence of dilute cosolutes upon the interface between coexisting liquid and vapor phases, and expresses the coefficients of the resulting expansion in terms of solute interactions.",
+      "title": "Understanding Liquid Interfaces",
+      "paragraph": "Researchers have developed a new theory to describe the influence of dilute cosolutes on the interface between coexisting liquid and vapor phases. The theory, called dilute solution theory, relates the interfacial free energy to the concentration of the liquid solution. The researchers tested the theory using molecular dynamics simulations of binary and ternary mixtures of Lennard-Jones spheres, demonstrating its accuracy in modeling interfacial properties.",
+      "link": "http://arxiv.org/abs/2609.02762v1",
+      "authors": [
+        "Varun Mandalaparthy",
+        "Benjamin M. Curlee",
+        "William G. Noid"
+      ],
+      "published": "2026-09-02",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.02762v1"
+    },
+    {
+      "id": "2609.03044v1",
+      "reason": "This paper combines an ab initio trained atomic cluster expansion (ACE) machine-learning potential for molecular dynamics with enhanced sampling to enable reactive simulations of the early stages of calcium carbonate precipitation at previously inaccessible length and time scales.",
+      "title": "Simulating Calcium Carbonate Formation",
+      "paragraph": "Scientists have used a machine-learning potential and enhanced sampling to simulate the early stages of calcium carbonate precipitation from aqueous solution. The simulations showed that ion association provides a favorable pathway for proton transfer, facilitating interconversion between carbonate, bicarbonate, and carbonic acid. The researchers observed significant changes in the coordination environments as species evolved during the simulations.",
+      "link": "http://arxiv.org/abs/2609.03044v1",
+      "authors": [
+        "Eslam Ibrahim",
+        "Yury Lysogorskiy",
+        "Ralf Drautz",
+        "Pablo M. Piaggi"
+      ],
+      "published": "2026-09-02",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.03044v1"
+    },
+    {
+      "id": "2609.03606v1",
+      "reason": "This paper determines the Frenkel line in the Yukawa fluid within the self-consistent relaxation theory, and shows that the Frenkel line in this system can be determined directly from the collective vibrational dynamics of particles.",
+      "title": "The Frenkel Line in Yukawa Fluids",
+      "paragraph": "Researchers have used the self-consistent relaxation theory to determine the Frenkel line in Yukawa fluids, which marks the transition from collective vibrational dynamics to particle-like behavior. The researchers found that the Frenkel line can be determined directly from the static structure factor, and proposed a physical interpretation of the roton minimum frequency for simple liquids near the Frenkel line.",
+      "link": "http://arxiv.org/abs/2609.03606v1",
+      "authors": [
+        "Ilnaz I. Fairushin",
+        "Anatolii V. Mokshin"
+      ],
+      "published": "2026-09-03",
+      "source": "arXiv",
+      "doi": "10.1088/1361-648X/aea1b6"
+    }
+  ]
+}
