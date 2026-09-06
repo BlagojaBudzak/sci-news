@@ -97,4 +97,10 @@ DATA_DIGEST_DIR = ROOT / "data" / "digests"
 SITE_DIGEST_DIR = ROOT / "site" / "digests"
 
 for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR):
+DATA_RAW_DIR = ROOT / "data" / "raw"
+DATA_DIGEST_DIR = ROOT / "data" / "digests"
+SITE_DIGEST_DIR = ROOT / "site" / "digests"
+DATA_TRACE_DIR = ROOT / "data" / "traces"
+
+for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR, DATA_TRACE_DIR):
     _d.mkdir(parents=True, exist_ok=True)

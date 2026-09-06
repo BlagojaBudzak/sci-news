@@ -101,6 +101,14 @@ class BlogEntry(BaseModel):
     title: str
     paragraph: str
     link: str
+    # Metadata below comes straight from fetcher.py's paper dicts, never
+    # from the LLM — same "Python owns ground truth" principle as `link`.
+    # New fields default sensibly so old cached JSON / older code that
+    # constructs a BlogEntry without them still works.
+    authors: List[str] = Field(default_factory=list)
+    published: str = ""
+    source: str = ""
+    doi: str = ""
 
 
 class DigestOutput(BaseModel):
@@ -286,6 +294,10 @@ def hydrate_digest_output(writer_output: WriterOutput, selected_papers: List[Dic
                 title=draft.title,
                 paragraph=draft.paragraph,
                 link=paper.get("url") or paper.get("doi") or "",
+                authors=paper.get("authors", []),
+                published=paper.get("published", ""),
+                source=paper.get("source", ""),
+                doi=paper.get("doi", ""),
             )
         )
 

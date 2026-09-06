@@ -20,7 +20,7 @@ from typing import Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-from config import CATEGORIES, DATA_DIGEST_DIR, SITE_DIGEST_DIR
+from config import CATEGORIES, DATA_DIGEST_DIR, DATA_TRACE_DIR, SITE_DIGEST_DIR
 from src.crew_setup import (
     ReviewerSelection,
     WriterOutput,
@@ -68,6 +68,8 @@ def run_for_category(category: str, llm=None) -> None:
     papers = fetch_papers_for_category(category)
     if not papers:
         print(f"  no new {category} papers in the lookback window — skipping")
+        trace.stages[-1].notes.append("lookback window empty")
+        finish()
         return
     print(f"  fetched {len(papers)} candidate papers")
 
@@ -94,10 +96,41 @@ def run_for_category(category: str, llm=None) -> None:
         print(f"  ! could not parse reviewer output for {category}")
         print(f"  raw output was:\n{review_result.raw}")
         return
+    print(
+        f"  pre-filter: {result.input_count} -> {result.output_count} papers "
+        f"(duplicates={result.duplicate_count}, short abstracts={result.missing_abstract_count}, "
+        f"low relevance={result.low_relevance_count})"
+    )
+    for example in result.filtered_examples:
+        print(f"  filtered: '{example['title']}' — {example['reason']}")
+
+    filtered_papers = result.candidates
+
+    print("[3/5] reviewer selecting the top 5 ...")
+    selected_papers = []
+    with trace.stage("reviewer", count_in=len(filtered_papers)) as s:
+        review_crew = build_review_crew(filtered_papers, category, llm=llm)
+        review_result = review_crew.kickoff()
+        selection = _parse_output(review_result, ReviewerSelection)
+        if selection is None:
+            s.status = "failed"
+            s.error = "reviewer output did not parse as ReviewerSelection"
+            print(f"  ! could not parse reviewer output for {category}")
+            print(f"  raw output was:\n{review_result.raw}")
+            finish()
+            return
+
+        selected_papers = select_papers(filtered_papers, selection)
+        s.count_out = len(selected_papers)
+        s.count_label = "selected"
+        dropped = len(selection.selected_papers) - len(selected_papers)
+        if dropped:
+            s.notes.append(f"{dropped} pick(s) referenced an id not in the candidate set")
 
     selected_papers = select_papers(prefilter.candidates, selection)
     if not selected_papers:
         print(f"  ! none of the reviewer's picks matched a fetched paper for {category}")
+        finish()
         return
     print(f"  reviewer selected {len(selected_papers)} papers")
 
