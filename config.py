@@ -9,19 +9,51 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 
-# ---------------------------------------------------------------------------
-# Categories
-# ---------------------------------------------------------------------------
-# arXiv does NOT have a dedicated "Chemistry" category — the closest fit is
-# physics.chem-ph (Chemical Physics). For true chemistry (organic synthesis,
-# materials, catalysis, etc.) we pull from ChemRxiv instead, and use arXiv
-# for the physics-flavored corner of chemistry. Add/replace category codes
-# freely: https://arxiv.org/category_taxonomy
 CATEGORIES = {
     "chemistry": {
         "label": "Chemistry",
         "arxiv_categories": ["physics.chem-ph"],
         "chemrxiv_terms": ["chemistry"],
+        "prefilter": {
+            "positive_keywords": {
+                "chemistry": 2.0,
+                "chemical reaction": 2.0,
+                "chemical synthesis": 2.0,
+                "catalysis": 2.5,
+                "catalyst": 2.0,
+                "electrochemistry": 2.5,
+                "electrochemical": 2.0,
+                "battery": 1.5,
+                "molecular": 1.5,
+                "molecule": 1.5,
+                "materials": 1.0,
+                "material": 1.0,
+                "polymer": 2.0,
+                "organic": 1.5,
+                "inorganic": 1.5,
+                "spectroscopy": 2.0,
+                "reaction": 1.0,
+                "synthesis": 1.5,
+                "nanomaterial": 2.0,
+            },
+            "negative_keywords": {
+                "fluid dynamics": 2.0,
+                "computational fluid dynamics": 2.5,
+                "turbulence": 2.0,
+                "general relativity": 3.0,
+                "cosmology": 3.0,
+                "astrophysics": 3.0,
+                "plasma physics": 2.5,
+                "quantum information": 2.0,
+                "particle physics": 3.0,
+            },
+            "min_abstract_chars": 120,
+            "min_relevance_score": 1.0,
+            "positive_match_required": True,
+            "relevance_weight": 1.0,
+            "recency_weight": 1.0,
+            "recency_half_life_days": 14.0,
+        },
     },
     "physics": {
         "label": "Physics",
@@ -30,51 +62,25 @@ CATEGORIES = {
     },
     "seismology": {
         "label": "Seismology",
-        # Seismology lives under Geophysics on arXiv.
         "arxiv_categories": ["physics.geo-ph"],
         "chemrxiv_terms": [],
     },
 }
 
-# ---------------------------------------------------------------------------
-# Fetch behavior
-# ---------------------------------------------------------------------------
-LOOKBACK_DAYS = 7                  # "papers from the past week"
-MAX_PAPERS_PER_SOURCE = 10         # cap per source -> ~20 candidates/category
-                                   # reach the Reviewer; the Writer only
-                                   # ever sees the 5 it selects (see
-                                   # src/crew_setup.py).
-# ABSTRACT_TRUNCATE_CHARS = 600    # trims abstracts before they hit the LLM prompt
-REVIEWER_ABSTRACT_CHARS = 800      # enough context for ranking ~10 candidates
-WRITER_ABSTRACT_CHARS = 1400       # more detail for accurate science summaries
+LOOKBACK_DAYS = 7
+MAX_PAPERS_PER_SOURCE = 10
+REVIEWER_ABSTRACT_CHARS = 800
+WRITER_ABSTRACT_CHARS = 1400
 
-
-# ---------------------------------------------------------------------------
-# Local LLM (Ollama) — tuned for an 8GB VRAM card
-# ---------------------------------------------------------------------------
 OLLAMA_BASE_URL = "http://localhost:11434"
-
-# Pull this once with: ollama pull llama3.1:8b-instruct-q4_K_M
-# Swap for "ollama/mistral:7b-instruct-q4_K_M" if you want a slightly smaller
-# footprint. See README.md "VRAM budget" section before changing this.
 OLLAMA_MODEL = "ollama/llama3.1:8b-instruct-q4_K_M"
-
-# Context window handed to Ollama via num_ctx. Larger = more papers per
-# prompt but more VRAM used for the KV cache. 4096 is not a hard floor —
-# it's simply enough for the Reviewer's ~20-candidate prompt (the biggest
-# one in the pipeline, now that the Writer only ever sees its 5 already-
-# selected papers) on top of the ~4.7GB of Q4_K_M weights on an 8GB card.
-# Raise it if you raise MAX_PAPERS_PER_SOURCE. See README.md for the math.
 OLLAMA_NUM_CTX = 4096
-OLLAMA_TEMPERATURE = 0.2          # lower = more reliable JSON from output_pydantic
+OLLAMA_TEMPERATURE = 0.2
 
-# ---------------------------------------------------------------------------
-# Paths
-# ---------------------------------------------------------------------------
-DATA_RAW_DIR = ROOT / "data" / "raw"          # cached raw API responses (debugging)
-DATA_DIGEST_DIR = ROOT / "data" / "digests"   # markdown archive, one file per run
-SITE_DIGEST_DIR = ROOT / "site" / "digests"   # JSON consumed by the static site
-DATA_TRACE_DIR = ROOT / "data" / "traces"     # per-run observability traces (debugging)
+DATA_RAW_DIR = ROOT / "data" / "raw"
+DATA_DIGEST_DIR = ROOT / "data" / "digests"
+SITE_DIGEST_DIR = ROOT / "site" / "digests"
+DATA_TRACE_DIR = ROOT / "data" / "traces"
 
 for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR, DATA_TRACE_DIR):
     _d.mkdir(parents=True, exist_ok=True)
