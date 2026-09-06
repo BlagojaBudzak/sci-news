@@ -1,8 +1,25 @@
 const select = document.getElementById("category-select");
 const list = document.getElementById("digest-list");
 const dateEl = document.getElementById("digest-date");
-
+const searchForm = document.getElementById("search-form");
+const searchInput = document.getElementById("search-input");
 const STORAGE_KEY = "sci-news-last-category";
+
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+searchForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const query = searchInput.value.trim();
+  if (!query) return;
+  const slug = slugify(query);
+  window.location.href = `/digest.html?q=${encodeURIComponent(slug)}`;
+});
 
 function formatDate(iso) {
   if (!iso) return "";

@@ -1,48 +1,82 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sci News — a weekly digest of new research</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sci News — Your AI research desk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header class="masthead">
-  <div class="masthead-inner">
-    <div class="masthead-title">
-      <h1>Sci News</h1>
-      <p class="tagline">Five papers a week, picked and explained by two AI agents reading straight off arXiv and ChemRxiv.</p>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="logo">Sci News</a>
+      <nav class="topnav">
+        <!-- can add links later -->
+      </nav>
     </div>
+  </header>
 
-    <div class="field-select">
-      <label for="category-select">Field</label>
-      <select id="category-select">
-        <option value="chemistry">Chemistry</option>
-        <option value="physics">Physics</option>
-        <option value="seismology">Seismology</option>
-      </select>
+  <main class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Your AI research desk</p>
+      <h1>What do you want to understand?</h1>
+      <p class="hero-sub">Search scientific literature by topic or question.</p>
+
+      <form id="search-form" class="search-form" role="search">
+        <input
+          type="search"
+          id="search-input"
+          class="search-input"
+          placeholder='Try "sodium-ion batteries" or "CRISPR gene editing"'
+          autocomplete="off"
+          aria-label="Search scientific topics"
+        >
+        <button type="submit" class="search-button">Search</button>
+      </form>
+
+      <div class="example-searches">
+        <span class="example-label">Examples:</span>
+        <a href="/digest.html?q=sodium-ion-batteries" class="example-link">solid-state batteries</a>
+        <a href="/digest.html?q=sodium-ion-batteries" class="example-link">sodium-ion batteries</a>
+        <a href="/digest.html?q=crispr-gene-editing" class="example-link">CRISPR gene editing</a>
+        <a href="/digest.html?q=exoplanet-atmospheres" class="example-link">exoplanet atmospheres</a>
+        <a href="/digest.html?q=hydrogen-storage" class="example-link">hydrogen storage</a>
+        <a href="/digest.html?q=ai-assisted-drug-discovery" class="example-link">AI-assisted drug discovery</a>
+      </div>
     </div>
-  </div>
-</header>
+  </main>
 
-<main class="digest">
-  <div class="digest-meta">
-    <span id="digest-date"></span>
-  </div>
+  <section class="recent-digests">
+    <div class="recent-inner">
+      <h2>Recent research digests</h2>
+      <div class="recent-grid">
+        <a href="/digest.html?q=crispr-gene-editing" class="recent-card">
+          <div class="recent-card-title">CRISPR gene editing</div>
+          <div class="recent-card-date">September 7, 2026</div>
+        </a>
+        <a href="/digest.html?q=sodium-ion-batteries" class="recent-card">
+          <div class="recent-card-title">Sodium-ion batteries</div>
+          <div class="recent-card-date">September 5, 2026</div>
+        </a>
+        <a href="/digest.html?q=exoplanet-atmospheres" class="recent-card">
+          <div class="recent-card-title">Exoplanet atmospheres</div>
+          <div class="recent-card-date">September 3, 2026</div>
+        </a>
+      </div>
+    </div>
+  </section>
 
-  <div id="digest-list" class="entry-list" aria-live="polite">
-    <!-- entries injected by script.js -->
-  </div>
-</main>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>Sci News generates research digests using AI and open scientific databases. <a href="/about.html">Learn more</a></p>
+      <p class="footer-small">Sources: OpenAlex, arXiv</p>
+    </div>
+  </footer>
 
-<footer class="site-footer">
-  <p>Generated locally with a 4-bit Llama 3.1 8B running on an RTX 3070, via <a href="https://ollama.ai" target="_blank" rel="noopener">Ollama</a> and <a href="https://github.com/crewAIInc/crewAI" target="_blank" rel="noopener">CrewAI</a>. Source metadata from arXiv and ChemRxiv.</p>
-</footer>
-
-<script src="script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
