@@ -16,7 +16,18 @@ CATEGORIES = {
     "chemistry": {
         "label": "Chemistry",
         "arxiv_categories": ["physics.chem-ph"],
-        "chemrxiv_terms": ["chemistry"],
+        "chemrxiv_terms": [],   # ChemRxiv is no longer used
+        # OpenAlex primary discovery configuration
+        "openalex": {
+            "search_query": (
+                "chemistry OR chemical reaction OR chemical synthesis "
+                "OR catalysis OR catalyst OR electrochemistry OR electrochemical "
+                "OR battery OR molecular OR molecule OR materials OR polymer "
+                "OR organic chemistry OR inorganic chemistry OR spectroscopy"
+            ),
+            "per_page": 50,
+            "max_results": 30,
+        },
         # Deterministic pre-filter. We intentionally keep these rules in
         # configuration so adding a field does not require editing the
         # filtering algorithm.
@@ -64,12 +75,14 @@ CATEGORIES = {
     "physics": {
         "label": "Physics",
         "arxiv_categories": ["physics.gen-ph", "cond-mat.mtrl-sci", "quant-ph"],
-        "chemrxiv_terms": [],
+        "chemrxiv_terms": [],   # no ChemRxiv
+        # No openalex config yet -> OpenAlex fetch will return []
     },
     "seismology": {
         "label": "Seismology",
         "arxiv_categories": ["physics.geo-ph"],
-        "chemrxiv_terms": [],
+        "chemrxiv_terms": [],   # no ChemRxiv
+        # No openalex config yet
     },
 }
 
@@ -92,11 +105,6 @@ OLLAMA_TEMPERATURE = 0.2
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
-DATA_RAW_DIR = ROOT / "data" / "raw"
-DATA_DIGEST_DIR = ROOT / "data" / "digests"
-SITE_DIGEST_DIR = ROOT / "site" / "digests"
-
-for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR):
 DATA_RAW_DIR = ROOT / "data" / "raw"
 DATA_DIGEST_DIR = ROOT / "data" / "digests"
 SITE_DIGEST_DIR = ROOT / "site" / "digests"

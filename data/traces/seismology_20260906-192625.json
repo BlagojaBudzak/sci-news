@@ -1,0 +1,37 @@
+{
+  "job_id": "20260906-192625",
+  "category": "seismology",
+  "started_at": "2026-09-06T19:26:25",
+  "stages": [
+    {
+      "name": "fetch",
+      "status": "ok",
+      "count_in": null,
+      "count_out": 6,
+      "count_label": "papers found",
+      "duration_seconds": 0.7,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "prefilter",
+      "status": "ok",
+      "count_in": 6,
+      "count_out": 0,
+      "count_label": "candidates retained",
+      "duration_seconds": 0.0,
+      "notes": [
+        "duplicates removed: 0",
+        "short/missing abstracts: 0",
+        "low relevance: 6",
+        "filtered: 'Cold Extremes during Dansgaard-Oeschger Oscillations' \u2014 no configured positive topical matches",
+        "filtered: 'PSDWII: Physical-Structure-Driven Waveform Inversion Imaging' \u2014 no configured positive topical matches",
+        "filtered: 'TREMORS: An Agentic Assistant for Multi-Datacenter Seismic Data Acquisition' \u2014 no configured positive topical matches",
+        "filtered: 'A Frequency-Aware Dynamic Knowledge Distillation Framework: An Effective Tool for Bridging Low- and High-Frequency Seismic Information' \u2014 no configured positive topical matches",
+        "filtered: 'Is Seismic Forecasting Possible with Physics-based AI?' \u2014 no configured positive topical matches",
+        "filtered: 'Ice-thickness based scaling of wave attenuation in sea ice: Application and assessment of wave spectra' \u2014 no configured positive topical matches"
+      ],
+      "error": null
+    }
+  ]
+}

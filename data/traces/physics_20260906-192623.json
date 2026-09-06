@@ -1,0 +1,41 @@
+{
+  "job_id": "20260906-192623",
+  "category": "physics",
+  "started_at": "2026-09-06T19:26:23",
+  "stages": [
+    {
+      "name": "fetch",
+      "status": "ok",
+      "count_in": null,
+      "count_out": 10,
+      "count_label": "papers found",
+      "duration_seconds": 2.19,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "prefilter",
+      "status": "ok",
+      "count_in": 10,
+      "count_out": 0,
+      "count_label": "candidates retained",
+      "duration_seconds": 0.0,
+      "notes": [
+        "duplicates removed: 0",
+        "short/missing abstracts: 0",
+        "low relevance: 10",
+        "filtered: 'Quantum communication and Bell nonlocality require infinite classical communication to simulate' \u2014 no configured positive topical matches",
+        "filtered: 'Measurements on the separated subsystems of an entangled state' \u2014 no configured positive topical matches",
+        "filtered: 'Twin-photon generation in a silicon nitride microresonator' \u2014 no configured positive topical matches",
+        "filtered: 'Reciprocity can halve what a mechanical network can learn' \u2014 no configured positive topical matches",
+        "filtered: 'Parameterised graph theory for tensor networks: entanglement rerouting, structural simplification, and agnostic tomography' \u2014 no configured positive topical matches",
+        "filtered: 'Vanilla Exact Synthesis of CNOT Circuits is NP-hard' \u2014 no configured positive topical matches",
+        "filtered: 'Spurious quantum correlations' \u2014 no configured positive topical matches",
+        "filtered: 'Efficient Conversion of Optical to Mechanical States Close to the Single-Quantum Level' \u2014 no configured positive topical matches",
+        "filtered: 'Characterizing Large Scale Quantum Systems with Error Per Circuit Layer' \u2014 no configured positive topical matches",
+        "filtered: 'Quantum thermalization achieves optimal approximate quantum error correction' \u2014 no configured positive topical matches"
+      ],
+      "error": null
+    }
+  ]
+}

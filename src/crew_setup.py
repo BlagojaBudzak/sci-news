@@ -277,7 +277,7 @@ def select_papers(papers: List[Dict], selection: ReviewerSelection) -> List[Dict
     return selected
 
 def hydrate_digest_output(writer_output: WriterOutput, selected_papers: List[Dict]) -> DigestOutput:
-    """Merges LLM draft articles back with Python ground-truth metadata (URL, Reason, ID)."""
+    """Merges LLM draft articles back with Python ground-truth metadata (URL, Reason, ID, authors, source, etc.)."""
     by_id = {p["id"]: p for p in selected_papers}
     entries = []
 
@@ -294,7 +294,7 @@ def hydrate_digest_output(writer_output: WriterOutput, selected_papers: List[Dic
                 title=draft.title,
                 paragraph=draft.paragraph,
                 link=paper.get("url") or paper.get("doi") or "",
-                authors=paper.get("authors", []),
+                authors=paper.get("authors", []),          # <-- ensure this line exists
                 published=paper.get("published", ""),
                 source=paper.get("source", ""),
                 doi=paper.get("doi", ""),

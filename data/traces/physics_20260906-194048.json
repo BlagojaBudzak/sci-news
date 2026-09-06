@@ -1,0 +1,59 @@
+{
+  "job_id": "20260906-194048",
+  "category": "physics",
+  "started_at": "2026-09-06T19:40:48",
+  "stages": [
+    {
+      "name": "fetch",
+      "status": "ok",
+      "count_in": null,
+      "count_out": 10,
+      "count_label": "papers found",
+      "duration_seconds": 0.23,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "prefilter",
+      "status": "ok",
+      "count_in": 10,
+      "count_out": 10,
+      "count_label": "candidates retained (no prefilter config)",
+      "duration_seconds": 0.0,
+      "notes": [
+        "No deterministic prefilter configuration; all papers passed through"
+      ],
+      "error": null
+    },
+    {
+      "name": "reviewer",
+      "status": "ok",
+      "count_in": 10,
+      "count_out": 5,
+      "count_label": "selected",
+      "duration_seconds": 4.71,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "writer",
+      "status": "ok",
+      "count_in": 5,
+      "count_out": 5,
+      "count_label": "articles written",
+      "duration_seconds": 9.44,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "count_in": 5,
+      "count_out": 5,
+      "count_label": "entries published",
+      "duration_seconds": 0.0,
+      "notes": [],
+      "error": null
+    }
+  ]
+}

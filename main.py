@@ -31,7 +31,7 @@ from src.crew_setup import (
     select_papers,
 )
 from src.digest_writer import write_digest
-from src.fetcher import fetch_papers_for_category
+from src.fetcher import fetch_combined_papers
 from src.prefilter import PrefilterConfig, filter_papers
 from src.trace import PipelineTrace
 
@@ -81,9 +81,14 @@ def run_for_category(category: str, llm=None) -> None:
 
     print("[1/5] fetching papers ...")
     with trace.stage("fetch") as s:
-        papers = fetch_papers_for_category(category)
+        papers, source_counts = fetch_combined_papers(category)
         s.count_out = len(papers)
         s.count_label = "papers found"
+        s.notes.append(
+            f"OpenAlex: {source_counts['openalex']}, "
+            f"arXiv: {source_counts['arxiv']}, "
+            f"combined: {source_counts['combined']}"
+        )
 
     if not papers:
         print(f"  no new {category} papers in the lookback window — skipping")
@@ -91,39 +96,58 @@ def run_for_category(category: str, llm=None) -> None:
         finish()
         return
 
-    print(f"  fetched {len(papers)} candidate papers")
+    print(f"  sources: OpenAlex={source_counts['openalex']}, arXiv={source_counts['arxiv']}")
 
+    # ----------------------------------------------------------------------
+    # [2/5] Deterministic pre‑filter (only if a config exists for this category)
+    # ----------------------------------------------------------------------
     print("[2/5] deterministic pre-filter ...")
-    with trace.stage("prefilter", count_in=len(papers)) as s:
-        prefilter = filter_papers(papers, _prefilter_config(category))
-        s.count_out = prefilter.output_count
-        s.count_label = "candidates retained"
-        s.notes.append(f"duplicates removed: {prefilter.duplicate_count}")
-        s.notes.append(f"short/missing abstracts: {prefilter.missing_abstract_count}")
-        s.notes.append(f"low relevance: {prefilter.low_relevance_count}")
-        for example in prefilter.filtered_examples[:10]:
-            s.notes.append(
-                f"filtered: {example['title']!r} — {example['reason']}"
-            )
 
-    print(
-        f"  pre-filter: {prefilter.input_count} -> {prefilter.output_count} papers "
-        f"(duplicates={prefilter.duplicate_count}, "
-        f"short abstracts={prefilter.missing_abstract_count}, "
-        f"low relevance={prefilter.low_relevance_count})"
-    )
-    for example in prefilter.filtered_examples[:5]:
-        print(f"  filtered: {example['title']!r} — {example['reason']}")
+    # Check if the category explicitly defines a 'prefilter' dictionary
+    prefilter_config = CATEGORIES[category].get("prefilter")
 
-    if not prefilter.candidates:
-        print(f"  ! pre-filter removed every {category} candidate — skipping reviewer")
-        finish()
-        return
+    if prefilter_config is not None:
+        # Run the deterministic filter
+        with trace.stage("prefilter", count_in=len(papers)) as s:
+            prefilter = filter_papers(papers, _prefilter_config(category))
+            s.count_out = prefilter.output_count
+            s.count_label = "candidates retained"
+            s.notes.append(f"duplicates removed: {prefilter.duplicate_count}")
+            s.notes.append(f"short/missing abstracts: {prefilter.missing_abstract_count}")
+            s.notes.append(f"low relevance: {prefilter.low_relevance_count}")
+            for example in prefilter.filtered_examples[:10]:
+                s.notes.append(f"filtered: {example['title']!r} — {example['reason']}")
 
+        print(
+            f"  pre-filter: {prefilter.input_count} -> {prefilter.output_count} papers "
+            f"(duplicates={prefilter.duplicate_count}, "
+            f"short abstracts={prefilter.missing_abstract_count}, "
+            f"low relevance={prefilter.low_relevance_count})"
+        )
+        for example in prefilter.filtered_examples[:5]:
+            print(f"  filtered: {example['title']!r} — {example['reason']}")
+
+        candidates = prefilter.candidates
+        if not candidates:
+            print(f"  ! pre-filter removed every {category} candidate — skipping reviewer")
+            finish()
+            return
+    else:
+        # No prefilter configuration: pass all papers through unchanged
+        with trace.stage("prefilter", count_in=len(papers)) as s:
+            s.count_out = len(papers)
+            s.count_label = "candidates retained (no prefilter config)"
+            s.notes.append("No deterministic prefilter configuration; all papers passed through")
+        print(f"  pre-filter: no configuration; passing all {len(papers)} papers through")
+        candidates = papers
+
+    # ----------------------------------------------------------------------
+    # [3/5] Reviewer
+    # ----------------------------------------------------------------------
     print("[3/5] reviewer selecting the top 5 ...")
     selected_papers = []
-    with trace.stage("reviewer", count_in=len(prefilter.candidates)) as s:
-        review_crew = build_review_crew(prefilter.candidates, category, llm=llm)
+    with trace.stage("reviewer", count_in=len(candidates)) as s:
+        review_crew = build_review_crew(candidates, category, llm=llm)
         review_result = review_crew.kickoff()
         selection = _parse_output(review_result, ReviewerSelection)
         if selection is None:
@@ -136,7 +160,7 @@ def run_for_category(category: str, llm=None) -> None:
             finish()
             return
 
-        selected_papers = select_papers(prefilter.candidates, selection)
+        selected_papers = select_papers(candidates, selection)
         s.count_out = len(selected_papers)
         s.count_label = "selected"
         dropped = len(selection.selected_papers) - len(selected_papers)
@@ -150,6 +174,9 @@ def run_for_category(category: str, llm=None) -> None:
 
     print(f"  reviewer selected {len(selected_papers)} papers")
 
+    # ----------------------------------------------------------------------
+    # [4/5] Writer
+    # ----------------------------------------------------------------------
     print("[4/5] writer drafting the digest from those papers only ...")
     digest = None
     with trace.stage("writer", count_in=len(selected_papers)) as s:
@@ -175,6 +202,9 @@ def run_for_category(category: str, llm=None) -> None:
                 f"{missing} draft(s) referenced an id Python couldn't match back"
             )
 
+    # ----------------------------------------------------------------------
+    # [5/5] Publish
+    # ----------------------------------------------------------------------
     print(f"[5/5] writing digest ({len(digest.entries)} entries) ...")
     with trace.stage("publish", count_in=len(digest.entries)) as s:
         write_digest(category, digest.entries, DATA_DIGEST_DIR, SITE_DIGEST_DIR)

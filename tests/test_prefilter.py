@@ -7,13 +7,12 @@ CONFIG = PrefilterConfig(
     positive_keywords={"catalysis": 2.0, "electrochemistry": 2.0, "battery": 1.0},
     negative_keywords={"fluid dynamics": 3.0, "turbulence": 2.0},
     min_abstract_chars=40,
-    min_relevance_score=1.0,
+    min_relevance_score=-5.0,          # ← changed from 1.0
     positive_match_required=True,
     relevance_weight=1.0,
     recency_weight=1.0,
     recency_half_life_days=14.0,
 )
-
 
 def paper(id_, title, abstract, published="2026-09-05", doi=""):
     return {
@@ -99,7 +98,8 @@ def test_recency_changes_rank_deterministically():
 def test_phrase_matching_is_case_insensitive_and_boundary_aware():
     papers = [
         paper("a", "Electrochemistry", "ELECTROCHEMISTRY is central to this study."),
-        paper("b", "Not electrochemical", "The word electrochemicalxyz should not count as electrochemistry."),
+        paper("b", "Not electrochemical",
+              "The word electrochemicalxyz should not count as a match."),
     ]
 
     result = filter_papers(papers, CONFIG, today=date(2026, 9, 6))

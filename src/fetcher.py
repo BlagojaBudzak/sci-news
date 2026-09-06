@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List
+from src.openalex import fetch_openalex_papers
 import requests
 import arxiv
 
@@ -77,85 +78,50 @@ def fetch_arxiv(categories: List[str], cutoff: datetime) -> List[Dict]:
         })
     return papers
 
-
-def fetch_chemrxiv(
-    terms: List[str], cutoff: datetime, max_papers: int = MAX_PAPERS_PER_SOURCE
-) -> List[Dict]:
-    """Fetch recent preprints from ChemRxiv REST API using custom browser headers."""
-    if not terms:
-        return []
-
-    date_from = cutoff.strftime("%Y-%m-%dT00:00:00.000Z")
-    endpoint = "https://chemrxiv.org/engage/chemrxiv/public-api/v1/items"
-    papers, seen_ids = [], set()
-
-    session = requests.Session()
-    session.headers.update(HEADERS)
-
-    for term in terms:
-        params = {
-            "term": term,
-            "limit": max_papers,
-            "sort": "PUBLISHED_DATE_DESC",
-            "searchDateFrom": date_from,
-        }
-        try:
-            res = session.get(endpoint, params=params, timeout=10)
-            res.raise_for_status()
-            data = res.json()
-
-            for hit in data.get("itemHits", []):
-                item = hit.get("item", {})
-                paper_id = item.get("id") or item.get("doi")
-                if not paper_id or paper_id in seen_ids:
-                    continue
-                seen_ids.add(paper_id)
-
-                authors = [
-                    f"{a.get('firstName', '')} {a.get('lastName', '')}".strip()
-                    for a in item.get("authors", [])
-                ]
-
-                papers.append({
-                    "id": paper_id,
-                    "title": _clean_text(item.get("title")),
-                    "abstract": _clean_text(item.get("abstract")),
-                    "authors": authors,
-                    "published": str(item.get("publishedDate", ""))[:10],
-                    "url": (
-                        f"https://doi.org/{item.get('doi')}"
-                        if item.get("doi")
-                        else f"https://chemrxiv.org/engage/chemrxiv/article-details/{paper_id}"
-                    ),
-                    "doi": item.get("doi") or "",
-                    "source": "ChemRxiv",
-                })
-        except Exception as e:
-            print(
-                f"  ! ChemRxiv fetch failed for '{term}': {e}. Falling back to arXiv only."
-            )
-
-    return papers
-
-
-def fetch_papers_for_category(category: str) -> List[Dict]:
-    """Fetch + cache raw metadata for a single category."""
+def fetch_combined_papers(category: str):
+    """
+    Fetch papers from OpenAlex (primary) and arXiv (secondary),
+    combine them, and return (combined_list, source_counts).
+    """
     if category not in CATEGORIES:
         raise ValueError(f"Unknown category: {category!r}. Add it to config.py.")
 
     cfg = CATEGORIES[category]
     cutoff = _cutoff_date()
 
-    papers = []
-    papers += fetch_arxiv(cfg.get("arxiv_categories", []), cutoff)
-    papers += fetch_chemrxiv(cfg.get("chemrxiv_terms", []), cutoff)
+    # 1. OpenAlex primary
+    openalex_papers = []
+    if cfg.get("openalex"):
+        openalex_papers = fetch_openalex_papers(
+            category_name=category,
+            category_config=cfg,
+            lookback_days=LOOKBACK_DAYS,
+            use_cache=True,
+        )
 
-    # Cache raw fetch to re-run agent loops without re-hitting external APIs
+    # 2. arXiv secondary
+    arxiv_papers = fetch_arxiv(cfg.get("arxiv_categories", []), cutoff)
+
+    # 3. Combine
+    combined = openalex_papers + arxiv_papers
+
+    # 4. Cache raw combined fetch
     raw_path = DATA_RAW_DIR / f"{category}_{datetime.now().strftime('%Y%m%d')}.json"
-    raw_path.write_text(json.dumps(papers, indent=2), encoding="utf-8")
+    raw_path.write_text(json.dumps(combined, indent=2), encoding="utf-8")
 
+    source_counts = {
+        "openalex": len(openalex_papers),
+        "arxiv": len(arxiv_papers),
+        "combined": len(combined),
+    }
+
+    return combined, source_counts
+
+
+def fetch_papers_for_category(category: str):
+    """Backward-compatible wrapper returning only the combined list."""
+    papers, _ = fetch_combined_papers(category)
     return papers
-
 
 if __name__ == "__main__":
     for cat in CATEGORIES:

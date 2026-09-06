@@ -1,0 +1,63 @@
+{
+  "job_id": "20260906-194727",
+  "category": "chemistry",
+  "started_at": "2026-09-06T19:47:27",
+  "stages": [
+    {
+      "name": "fetch",
+      "status": "ok",
+      "count_in": null,
+      "count_out": 10,
+      "count_label": "papers found",
+      "duration_seconds": 0.54,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "prefilter",
+      "status": "ok",
+      "count_in": 10,
+      "count_out": 8,
+      "count_label": "candidates retained",
+      "duration_seconds": 0.01,
+      "notes": [
+        "duplicates removed: 0",
+        "short/missing abstracts: 0",
+        "low relevance: 2",
+        "filtered: 'BU-MBAR: A hybrid solution strategy for the MBAR equations' \u2014 no configured positive topical matches",
+        "filtered: 'Cascade coalescence dynamically sustains bubble retention near gas-evolving surfaces' \u2014 no configured positive topical matches"
+      ],
+      "error": null
+    },
+    {
+      "name": "reviewer",
+      "status": "ok",
+      "count_in": 8,
+      "count_out": 5,
+      "count_label": "selected",
+      "duration_seconds": 10.61,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "writer",
+      "status": "ok",
+      "count_in": 5,
+      "count_out": 5,
+      "count_label": "articles written",
+      "duration_seconds": 10.29,
+      "notes": [],
+      "error": null
+    },
+    {
+      "name": "publish",
+      "status": "ok",
+      "count_in": 5,
+      "count_out": 5,
+      "count_label": "entries published",
+      "duration_seconds": 0.0,
+      "notes": [],
+      "error": null
+    }
+  ]
+}

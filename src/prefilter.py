@@ -58,6 +58,39 @@ class PrefilterResult:
 
 _WORD_RE = re.compile(r"\b[\wÀ-ÖØ-öø-ÿ]+(?:[-'][\wÀ-ÖØ-öø-ÿ]+)*\b", re.UNICODE)
 
+def deduplicate_papers(papers: list[dict]) -> list[dict]:
+    """
+    Remove duplicate papers using DOI, normalised URL, and source ID.
+
+    Preserves provenance by keeping the first occurrence of each paper.
+    """
+    seen_doi = set()
+    seen_url = set()
+    seen_source_id = set()
+    unique = []
+
+    for paper in papers:
+        doi = (paper.get("doi") or "").strip().lower()
+        url = (paper.get("url") or "").strip().lower()
+        source_id = (paper.get("source_id") or paper.get("id") or "").strip().lower()
+
+        if doi and doi in seen_doi:
+            continue
+        if url and url in seen_url:
+            continue
+        if source_id and source_id in seen_source_id:
+            continue
+
+        if doi:
+            seen_doi.add(doi)
+        if url:
+            seen_url.add(url)
+        if source_id:
+            seen_source_id.add(source_id)
+
+        unique.append(paper)
+
+    return unique
 
 def _normalize(text: Any) -> str:
     return " ".join(str(text or "").split()).strip().lower()

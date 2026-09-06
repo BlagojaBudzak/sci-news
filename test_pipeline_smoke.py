@@ -33,8 +33,10 @@ FIXTURE_PAPERS = [
     {
         "id": "2608.00001v1",
         "title": "A Real Paper",
-        "abstract": "An abstract about real chemistry.",
-        "authors": ["A. Author", "B. Author"],
+        "abstract": ("This paper presents a detailed study of catalytic mechanisms in "
+                     "organometallic chemistry. We combine experimental and computational "
+                     "methods to reveal new insights into reaction pathways and selectivity."),
+        "authors": ["A. Author", "B. Author"],          # <-- add this
         "published": "2026-08-30",
         "url": "http://arxiv.org/abs/2608.00001v1",
         "doi": "10.1000/real",
@@ -43,8 +45,10 @@ FIXTURE_PAPERS = [
     {
         "id": "2608.00002v1",
         "title": "Another Real Paper",
-        "abstract": "Another abstract.",
-        "authors": ["C. Author"],
+        "abstract": ("Electrochemical synthesis of novel battery materials is explored "
+                     "using advanced in situ spectroscopy. The findings demonstrate "
+                     "significant improvements in energy density and cycling stability."),
+        "authors": ["C. Author"],                       # <-- add this
         "published": "2026-08-31",
         "url": "http://arxiv.org/abs/2608.00002v1",
         "doi": "",
@@ -68,7 +72,18 @@ class _FakeCrew:
 
 
 def _patch_pipeline(monkeypatch, tmp_path):
-    monkeypatch.setattr(main, "fetch_papers_for_category", lambda category: FIXTURE_PAPERS)
+    monkeypatch.setattr(
+        main,
+        "fetch_combined_papers",
+        lambda category: (
+            FIXTURE_PAPERS,
+            {
+                "openalex": 0,
+                "arxiv": len(FIXTURE_PAPERS),
+                "combined": len(FIXTURE_PAPERS),
+            },
+        ),
+    )
 
     reviewer_selection = ReviewerSelection(selected_papers=[
         SelectedPaper(id="2608.00001v1", reason="Novel result."),
@@ -110,7 +125,7 @@ def test_run_for_category_end_to_end_with_faked_llm(monkeypatch, tmp_path):
     assert len(trace_files) == 1
     trace = json.loads(trace_files[0].read_text())
     stage_names = [s["name"] for s in trace["stages"]]
-    assert stage_names == ["fetch", "reviewer", "writer", "publish"]
+    assert stage_names == ["fetch", "prefilter", "reviewer", "writer", "publish"]
     assert all(s["status"] == "ok" for s in trace["stages"])
 
 
