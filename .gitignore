@@ -2,7 +2,6 @@ scivenv/
 __pycache__/
 *.pyc
 data/raw/
-digests/
 .env
 /scivenv/
 
