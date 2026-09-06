@@ -78,7 +78,12 @@ def fetch_arxiv(categories: List[str], cutoff: datetime) -> List[Dict]:
         })
     return papers
 
-def fetch_combined_papers(category: str):
+def fetch_combined_papers(
+    category_config: dict,
+    category: str,
+    lookback_days: int | None = None,
+    search_query_override: str | None = None,
+) -> tuple[list[dict], dict]:
     """
     Fetch papers from OpenAlex (primary) and arXiv (secondary),
     combine them, and return (combined_list, source_counts).
@@ -96,11 +101,12 @@ def fetch_combined_papers(category: str):
             category_name=category,
             category_config=cfg,
             lookback_days=LOOKBACK_DAYS,
+            search_query_override=search_query_override,
             use_cache=True,
         )
 
     # 2. arXiv secondary
-    arxiv_papers = fetch_arxiv(cfg.get("arxiv_categories", []), cutoff)
+    arxiv_papers = fetch_arxiv(category_config, lookback_days)
 
     # 3. Combine
     combined = openalex_papers + arxiv_papers

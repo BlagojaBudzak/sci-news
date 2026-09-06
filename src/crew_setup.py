@@ -155,7 +155,7 @@ def _build_reviewer(llm: LLM, category: str) -> Agent:
             "no patience for incremental, over-hyped, or narrow findings."
         ),
         llm=llm,
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
     )
 
@@ -174,7 +174,7 @@ def _build_writer(llm: LLM) -> Agent:
             "or inventing claims that are not supported by the source."
         ),
         llm=llm,
-        verbose=True,
+        verbose=False,
         allow_delegation=False,
     )
 
@@ -319,7 +319,7 @@ def build_review_crew(papers: List[Dict], category: str, llm: Optional[LLM] = No
         agents=[reviewer],
         tasks=[review_task],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
     )
 
 
@@ -338,5 +338,5 @@ def build_write_crew(selected_papers: List[Dict], category: str, llm: Optional[L
         agents=[writer],
         tasks=[write_task],
         process=Process.sequential,
-        verbose=True,
+        verbose=False,
     )

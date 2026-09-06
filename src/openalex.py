@@ -14,7 +14,7 @@ import requests
 
 BASE_URL = "https://api.openalex.org/works"
 RAW_DIR = DATA_RAW_DIR
-USER_AGENT = "SciNews/0.1 (mailto:dev@example.com)"
+USER_AGENT = "SciNews/0.1 (mailto:budzak.b@outlook.com)"
 
 
 def _build_params(search_query: str, from_date: str, to_date: str, per_page: int) -> dict:
@@ -27,7 +27,7 @@ def _build_params(search_query: str, from_date: str, to_date: str, per_page: int
             "has_abstract:true"
         ),
         "per-page": per_page,
-        "mailto": "dev@example.com",
+        "mailto": "budzak.b@outlook.com",
     }
 
 
@@ -89,16 +89,22 @@ def fetch_openalex_papers(
     category_config: dict,
     lookback_days: int = 7,
     use_cache: bool = True,
+    search_query_override: str | None = None
 ) -> list[dict]:
     """
-    Fetch papers from OpenAlex for a category.
+    Fetches papers from OpenAlex using category config or dynamic query override.
 
     Returns a list of normalised paper dicts.
     On any failure, returns an empty list so the pipeline can fall back
     to secondary sources.
     """
+    if search_query_override:
+        search_query = search_query_override
+    else:
+        # Fallback to category config
+        search_query = category_config.get("openalex", {}).get("search_query", "")
+
     openalex_cfg = category_config.get("openalex", {})
-    search_query = openalex_cfg.get("search_query", "").strip()
     if not search_query:
         return []
 

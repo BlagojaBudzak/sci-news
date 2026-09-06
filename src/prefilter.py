@@ -27,6 +27,7 @@ class PrefilterConfig:
     relevance_weight: float = 1.0
     recency_weight: float = 1.0
     recency_half_life_days: float = 14.0
+    max_candidates: int | None = None
 
 
 @dataclass(frozen=True)
@@ -117,6 +118,43 @@ def stable_identifiers(paper: Mapping[str, Any]) -> tuple[str, ...]:
         if normalized:
             values.append(normalized)
     return tuple(dict.fromkeys(values))
+
+def _normalize_title(title: Any) -> str:
+    """Normalize a paper title for duplicate detection."""
+    text = _normalize(str(title or ""))
+    # Remove punctuation that often varies between versions (e.g. colons, hyphens)
+    text = re.sub(r"[^a-z0-9\s]", "", text)
+    return text
+
+
+def _deduplicate_by_title(
+    papers: Sequence[Mapping[str, Any]],
+) -> tuple[list[Mapping[str, Any]], int, list[dict[str, Any]]]:
+    """Remove papers whose normalized titles are identical."""
+    seen_titles: set[str] = set()
+    unique: list[Mapping[str, Any]] = []
+    examples: list[dict[str, Any]] = []
+
+    for paper in papers:
+        title_key = _normalize_title(paper.get("title"))
+        if not title_key:
+            # Keep papers with missing titles; they are not duplicates by title
+            unique.append(paper)
+            continue
+
+        if title_key in seen_titles:
+            if len(examples) < 10:
+                examples.append({
+                    "id": paper.get("id", ""),
+                    "title": paper.get("title", ""),
+                    "reason": f"duplicate title: {title_key[:80]}",
+                })
+            continue
+
+        seen_titles.add(title_key)
+        unique.append(paper)
+
+    return unique, len(papers) - len(unique), examples
 
 
 def _phrase_matches(text: str, phrases: Iterable[str]) -> list[str]:
@@ -230,11 +268,17 @@ def filter_papers(
     input_count = len(papers)
 
     unique, duplicate_count, duplicate_examples = _deduplicate(papers)
+    # Second dedup pass: identical normalized titles (e.g. same preprint
+    # published under two Zenodo DOIs)
+    unique, title_dup_count, title_examples = _deduplicate_by_title(unique)
+    duplicate_count += title_dup_count
 
     ranked: list[tuple[int, FilteredPaper]] = []
     filtered_examples = list(duplicate_examples)
+    filtered_examples.extend(title_examples)
     missing_abstract_count = 0
     low_relevance_count = 0
+
 
     for index, paper in enumerate(unique):
         abstract = str(paper.get("abstract") or "").strip()
@@ -281,6 +325,11 @@ def filter_papers(
     )
     details = [item[1] for item in ranked]
     candidates = [detail.paper for detail in details]
+    if config.max_candidates is not None and config.max_candidates > 0:
+        if len(candidates) > config.max_candidates:
+            # Keep only the top N candidates, but details remain full for
+            # debugging if needed.
+            candidates = candidates[: config.max_candidates]
 
     return PrefilterResult(
         candidates=candidates,
