@@ -1,31 +1,31 @@
 # Sci News — Hydrogen-Storage — 2026-09-07
 
-## Titanium-Decorated Graphene-Like Carbon Nitride for Hydrogen Storage
+## Machine Learning-Driven Identification of Key Factors Influencing Hydrogen Storage Performance in Metal Hydrides
 
-Researchers used computational methods to evaluate the hydrogen storage performance of transition-metal-decorated graphene-like carbon nitride (g-C3N4) composites. They identified five promising candidates, with titanium (Ti) decorated g-C3N4 showing the best performance, storing up to 9.38 wt% hydrogen. The study suggests that Ti@g-C3N4 could be a viable material for reversible hydrogen storage applications.
+Researchers used machine learning methods to analyze a dataset of 721 metal hydrides and identify the key factors that influence their thermodynamic properties. They found that three critical descriptors - specific volume per atom, magnetic transition metal fraction, and mean shear modulus - significantly impact the performance of hydrogen storage materials. This study provides valuable insights into the fundamental factors governing hydrogen storage in metal hydrides.
 
-**Read the paper:** [https://doi.org/10.1021/acsaem.6c02745](https://doi.org/10.1021/acsaem.6c02745)
+**Read the paper:** [https://doi.org/10.60893/figshare.adv.c.8612309](https://doi.org/10.60893/figshare.adv.c.8612309)
 
-## Calcium-Decorated Silicene for High-Capacity Hydrogen Storage
+## From Waste to Value: End‐of‐Life Proton‐Exchange Membranes as Hydrogen Storage Materials at Mild Conditions
 
-A team of researchers used first-principles calculations to investigate the hydrogen storage behavior of calcium-decorated silicene. They found that a single calcium atom can bind to the hollow site of the silicene monolayer, enhancing the binding affinity to hydrogen molecules. The study suggests that calcium-decorated silicene could store up to 7.5 wt% hydrogen and release it completely at approximately 380 K.
+Researchers discovered that end-of-life proton-exchange membranes, such as Nafion, can be repurposed as efficient hydrogen storage materials. The sub-nano proton-conducting channel network in these membranes provides rapid diffusion pathways for hydrogen, while the sulfonic acid groups on the channel walls serve as effective chemisorption sites. This study reveals that used Nafion membranes can store hydrogen under mild conditions, with a capacity of 2.05 wt.% at 150°C and 5 MPa.
 
-**Read the paper:** [https://doi.org/10.3390/nano16171060](https://doi.org/10.3390/nano16171060)
+**Read the paper:** [https://doi.org/10.1002/adfm.78046](https://doi.org/10.1002/adfm.78046)
 
-## Using Carbon Dioxide as a Cushion Gas for Hydrogen Geostorage
+## Recent Advances in Solid-State Hydrogen Storage Based on Metal Hydrides and Nanoporous Carbon Materials
 
-Researchers explored the use of carbon dioxide (CO2) as a cushion gas in underground hydrogen storage. They developed a three-dimensional reservoir model to simulate the behavior of hydrogen and CO2 in an artificial aquifer. The study found that the CO2 cushion gas can establish a protection zone at the front of the hydrogen plume, enhancing injection and production efficiency.
+This review examines current hydrogen storage technologies and the physical and chemical mechanisms underlying hydrogen adsorption. It discusses traditional storage approaches, including compressed gas and liquid hydrogen, and highlights recent advances in solid-state hydrogen storage systems based on metal hydrides. The review also focuses on nanoporous carbon materials and the role of the hydrogen spillover mechanism in improving adsorption performance.
 
-**Read the paper:** [https://doi.org/10.2118/234955-ms](https://doi.org/10.2118/234955-ms)
+**Read the paper:** [https://doi.org/10.3390/nano16171049](https://doi.org/10.3390/nano16171049)
 
-## Double Perovskite Hydrides for Energy Conversion Applications
+## Hydrogen Storage on Transition-Metal-Decorated Nitrogen-Modified Carbon Nanoribbons
 
-A team of researchers investigated the solid-state hydrogen storage capacity of A2SnH6 (A = Li, Na, K) double perovskite hydrides. They found that the substitution of lithium with sodium and potassium leads to an increase in lattice parameters, but a decrease in gravimetric hydrogen storage capacities. The study suggests that Na2SnH6 emerges as the most promising candidate for meeting the U.S. DOE hydrogen storage targets.
+Researchers used first-principles density functional theory calculations to investigate hydrogen storage on transition-metal-decorated nitrogen-modified carbon nanoribbons. They found that the maximum theoretical gravimetric storage capacities at 0 K reached 7.48 wt% for the Mn-doped system and 6.55 wt% for the Y-doped system. The study also analyzed the thermodynamic properties of the doped systems and found that H2 adsorption is favored at low temperatures and high pressures.
 
-**Read the paper:** [https://doi.org/10.1038/s41598-026-66823-4](https://doi.org/10.1038/s41598-026-66823-4)
+**Read the paper:** [http://arxiv.org/abs/2609.04623v1](http://arxiv.org/abs/2609.04623v1)
 
-## High-Efficient and Reversible Hydrogen Storage in Sun-Graphyne Monolayers
+## A theoretical insight into hydrogen storage and thermoelectric properties of double perovskite hydrides Rb2CuYH6 and Cs2CuYH6
 
-Researchers used first-principles calculations to investigate the structural, electronic, and hydrogen storage performance of pure and charge-modulated Sun-graphyne (SGY) monolayers. They found that the negatively charged SGY monolayer is energetically and thermodynamically stable, with an increased average adsorption energy of 0.224 eV for H2 adsorption. The study suggests that the effective hydrogen storage capacity maintains a high amount of 12.1-14.1 wt% at practical conditions.
+Researchers used density functional theory to examine the structural, hydrogen storage, electronic, mechanical, optical, and thermoelectric properties of novel double perovskite hydrides Rb2CuYH6 and Cs2CuYH6. They found that both compounds exhibit negative formation energies and have good mechanical properties. The study also revealed that both hydrides are indirect band gap semiconductors and have good thermoelectric properties.
 
-**Read the paper:** [https://doi.org/10.1021/acs.langmuir.6c02574](https://doi.org/10.1021/acs.langmuir.6c02574)
+**Read the paper:** [https://doi.org/10.1007/s10971-026-07230-z](https://doi.org/10.1007/s10971-026-07230-z)

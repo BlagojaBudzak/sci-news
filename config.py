@@ -112,3 +112,6 @@ DATA_TRACE_DIR = ROOT / "data" / "traces"
 
 for _d in (DATA_RAW_DIR, DATA_DIGEST_DIR, SITE_DIGEST_DIR, DATA_TRACE_DIR):
     _d.mkdir(parents=True, exist_ok=True)
+
+FACT_CHECKER_MAX_REVISION_ROUNDS = 1
+FACT_CHECKER_ABSTRACT_CHARS = 1400  # same as writer

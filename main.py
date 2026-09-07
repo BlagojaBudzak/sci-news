@@ -9,7 +9,8 @@ Usage:
 Pipeline shape, per category:
 
     fetch -> deterministic pre-filter -> Reviewer picks 5 -> select_papers()
-    -> Writer sees only those 5 -> hydrate_digest_output() -> digest
+    -> Writer sees only those 5 -> Fact Checker verifies claims -> hydrate_digest_output()
+    -> digest
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ from typing import Any, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
-from config import CATEGORIES, DATA_DIGEST_DIR, DATA_TRACE_DIR, SITE_DIGEST_DIR
+from config import CATEGORIES, DATA_DIGEST_DIR, DATA_TRACE_DIR, SITE_DIGEST_DIR, FACT_CHECKER_MAX_REVISION_ROUNDS
 from src.crew_setup import (
     ReviewerSelection,
     WriterOutput,
@@ -31,6 +32,7 @@ from src.crew_setup import (
     select_papers,
 )
 from src.digest_writer import write_digest
+from src.fact_checker import FactCheckReport, build_revision_feedback, run_fact_check
 from src.fetcher import fetch_combined_papers
 from src.prefilter import PrefilterConfig, filter_papers
 from src.trace import PipelineTrace
@@ -98,16 +100,12 @@ def run_for_category(category: str, llm=None) -> None:
 
     print(f"  sources: OpenAlex={source_counts['openalex']}, arXiv={source_counts['arxiv']}")
 
-    # ----------------------------------------------------------------------
-    # [2/5] Deterministic pre‑filter (only if a config exists for this category)
-    # ----------------------------------------------------------------------
+    # [2/5] Deterministic pre‑filter
     print("[2/5] deterministic pre-filter ...")
 
-    # Check if the category explicitly defines a 'prefilter' dictionary
     prefilter_config = CATEGORIES[category].get("prefilter")
 
     if prefilter_config is not None:
-        # Run the deterministic filter
         with trace.stage("prefilter", count_in=len(papers)) as s:
             prefilter = filter_papers(papers, _prefilter_config(category))
             s.count_out = prefilter.output_count
@@ -133,7 +131,6 @@ def run_for_category(category: str, llm=None) -> None:
             finish()
             return
     else:
-        # No prefilter configuration: pass all papers through unchanged
         with trace.stage("prefilter", count_in=len(papers)) as s:
             s.count_out = len(papers)
             s.count_label = "candidates retained (no prefilter config)"
@@ -141,9 +138,7 @@ def run_for_category(category: str, llm=None) -> None:
         print(f"  pre-filter: no configuration; passing all {len(papers)} papers through")
         candidates = papers
 
-    # ----------------------------------------------------------------------
     # [3/5] Reviewer
-    # ----------------------------------------------------------------------
     print("[3/5] reviewer selecting the top 5 ...")
     selected_papers = []
     with trace.stage("reviewer", count_in=len(candidates)) as s:
@@ -174,42 +169,84 @@ def run_for_category(category: str, llm=None) -> None:
 
     print(f"  reviewer selected {len(selected_papers)} papers")
 
-    # ----------------------------------------------------------------------
-    # [4/5] Writer
-    # ----------------------------------------------------------------------
+    # [4/5] Writer + Fact Checker (with possible revision loop)
     print("[4/5] writer drafting the digest from those papers only ...")
-    digest = None
-    with trace.stage("writer", count_in=len(selected_papers)) as s:
-        write_crew = build_write_crew(selected_papers, category, llm=llm)
-        write_result = write_crew.kickoff()
-        writer_output = _parse_output(write_result, WriterOutput)
-        if writer_output is None:
-            s.status = "failed"
-            s.error = "writer output did not parse as WriterOutput"
-            print(f"  ! could not parse writer output for {category}")
-            raw = getattr(write_result, "raw", None)
-            if raw is not None:
-                print(f"  raw output was:\n{raw}")
-            finish()
-            return
+    max_revisions = FACT_CHECKER_MAX_REVISION_ROUNDS
+    writer_output = None
+    fact_check_report = None
+    final_verification_status = "UNVERIFIED"
 
-        digest = hydrate_digest_output(writer_output, selected_papers)
-        s.count_out = len(digest.entries)
-        s.count_label = "articles written"
-        missing = len(selected_papers) - len(digest.entries)
-        if missing:
-            s.notes.append(
-                f"{missing} draft(s) referenced an id Python couldn't match back"
-            )
+    # We'll record writer attempts and fact-check attempts in separate trace stages.
+    writer_attempt = 0
+    fact_check_attempt = 0
 
-    # ----------------------------------------------------------------------
-    # [5/5] Publish
-    # ----------------------------------------------------------------------
-    print(f"[5/5] writing digest ({len(digest.entries)} entries) ...")
-    with trace.stage("publish", count_in=len(digest.entries)) as s:
+    with trace.stage("writer", count_in=len(selected_papers)) as writer_stage:
+        feedback = None
+        for revision_round in range(max_revisions + 1):
+            writer_attempt += 1
+            print(f"  writer attempt {writer_attempt}/{max_revisions + 1}")
+            write_crew = build_write_crew(selected_papers, category, llm=llm, feedback=feedback)
+            write_result = write_crew.kickoff()
+            writer_output = _parse_output(write_result, WriterOutput)
+            if writer_output is None:
+                writer_stage.status = "failed"
+                writer_stage.error = "writer output did not parse as WriterOutput"
+                print(f"  ! could not parse writer output for {category}")
+                raw = getattr(write_result, "raw", None)
+                if raw is not None:
+                    print(f"  raw output was:\n{raw}")
+                finish()
+                return
+
+            # Run Fact Checker
+            fact_check_attempt += 1
+            print(f"  fact-check attempt {fact_check_attempt}/{max_revisions + 1}")
+            fact_check_report = run_fact_check(writer_output, selected_papers, llm)
+            print(f"    fact-check overall status: {fact_check_report.overall_status}")
+            final_verification_status = fact_check_report.overall_status
+
+            if fact_check_report.overall_status == "PASS" or revision_round == max_revisions:
+                break
+
+            feedback = build_revision_feedback(fact_check_report)
+            if not feedback:
+                # Should not happen, but avoid infinite loop.
+                break
+
+            print(f"    revision needed; generating feedback...")
+            writer_stage.notes.append(f"revision {revision_round + 1} needed: {fact_check_report.overall_status}")
+
+        writer_stage.count_out = len(writer_output.articles)
+        writer_stage.count_label = "articles written"
+        writer_stage.notes.append(f"writer attempts: {writer_attempt}")
+        if len(writer_output.articles) < len(selected_papers):
+            missing = len(selected_papers) - len(writer_output.articles)
+            writer_stage.notes.append(f"{missing} draft(s) referenced an id Python couldn't match back")
+
+    # Record Fact Checker stage(s)
+    with trace.stage("fact_checker", count_in=len(fact_check_report.assessments)) as fc_stage:
+        fc_stage.count_out = len(fact_check_report.assessments)
+        fc_stage.count_label = "claims assessed"
+        fc_stage.notes.append(f"attempts: {fact_check_attempt}")
+        fc_stage.notes.append(f"overall status: {fact_check_report.overall_status}")
+        verdict_counts = {}
+        for a in fact_check_report.assessments:
+            verdict_counts[a.verdict] = verdict_counts.get(a.verdict, 0) + 1
+        for v, c in verdict_counts.items():
+            fc_stage.notes.append(f"{c} claim(s) with verdict {v}")
+
+    # [5/5] Publish with verification status
+    print(f"[5/5] writing digest ({len(writer_output.articles)} entries) ...")
+    with trace.stage("publish", count_in=len(writer_output.articles)) as s:
+        digest = hydrate_digest_output(
+            writer_output,
+            selected_papers,
+            verification_status=final_verification_status,
+        )
         write_digest(category, digest.entries, DATA_DIGEST_DIR, SITE_DIGEST_DIR)
         s.count_out = len(digest.entries)
         s.count_label = "entries published"
+        s.notes.append(f"verification status: {final_verification_status}")
 
     finish()
 
@@ -225,9 +262,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    # One shared LLM/model instance for the whole run, across all categories.
     llm = get_local_llm()
-
     for category in args.categories:
         run_for_category(category, llm=llm)
 

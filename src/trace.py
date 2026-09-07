@@ -70,8 +70,9 @@ class PipelineTrace:
     stages: List[StageResult] = field(default_factory=list)
 
     @classmethod
-    def start(cls, category: str) -> "PipelineTrace":
-        job_id = datetime.now().strftime("%Y%m%d-%H%M%S")
+    def start(cls, category: str, job_id: str | None = None) -> "PipelineTrace":
+        if job_id is None:
+            job_id = datetime.now().strftime("%Y%m%d-%H%M%S")
         return cls(
             category=category,
             job_id=job_id,
