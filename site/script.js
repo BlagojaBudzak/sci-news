@@ -18,7 +18,7 @@ searchForm.addEventListener("submit", (e) => {
   const query = searchInput.value.trim();
   if (!query) return;
   const slug = slugify(query);
-  window.location.href = `/digest.html?q=${encodeURIComponent(slug)}`;
+  window.location.href = `digest.html?q=${encodeURIComponent(slug)}`;
 });
 
 function formatDate(iso) {
