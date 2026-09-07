@@ -1,0 +1,101 @@
+{
+  "category": "earthquake-resistant-materials",
+  "date": "2026-09-07",
+  "entries": [
+    {
+      "id": "openalex:W7207526114",
+      "reason": "This paper proposes a hybrid AI-driven framework for the early detection of structural irregularities in earthquake-resistant architectural design, which has the potential to significantly improve building safety and reduce damage from earthquakes.",
+      "title": "Hybrid AI Model for Early Detection of Structural Irregularities in Earthquake-Resistant Architectural Design",
+      "paragraph": "Researchers developed a hybrid AI-driven framework for detecting structural irregularities in earthquake-resistant architectural design. The system, called Irregularity Detector (ID.1), uses a Convolutional Neural Network (CNN) to analyze architectural plan images and combines this with analytical structural parameters. The model was trained on 1,576 architectural plan samples and achieved a validation accuracy of 99.2% and an F1-score of 0.98.",
+      "link": "https://doi.org/10.13189/cea.2026.140508",
+      "authors": [
+        "Selin Deniz Ataş",
+        "Aslı Er Akan",
+        "Hilal Tuğba Örmeci̇oğlu"
+      ],
+      "published": "2026-09-03",
+      "source": "openalex",
+      "doi": "https://doi.org/10.13189/cea.2026.140508",
+      "claims": [
+        {
+          "claim": "The researchers developed a hybrid AI-driven framework for detecting structural irregularities in earthquake-resistant architectural design.",
+          "paper_ids": [
+            "openalex:W7207526114"
+          ]
+        },
+        {
+          "claim": "The system, called Irregularity Detector (ID.1), uses a Convolutional Neural Network (CNN) to analyze architectural plan images.",
+          "paper_ids": [
+            "openalex:W7207526114"
+          ]
+        },
+        {
+          "claim": "The model achieved a validation accuracy of 99.2% and an F1-score of 0.98.",
+          "paper_ids": [
+            "openalex:W7207526114"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7204952938",
+      "reason": "This study offers a replicable framework for seismic vulnerability assessment that integrates managerial, human, and logistical dimensions, which can help construction projects in seismic-prone regions to better prepare for and respond to earthquakes.",
+      "title": "Seismic vulnerability assessment of construction projects: A multi-criteria approach",
+      "paragraph": "Researchers applied the Analytic Hierarchy Process (AHP) to evaluate seismic vulnerability in construction projects. They used a structured multi-criteria decision-making model to assess key parameters, including human resources, materials, supply logistics, and organizational practices. The study found that human and organizational factors significantly influence overall vulnerability.",
+      "link": "https://doi.org/10.5459/bnzsee.1776",
+      "authors": [
+        "Ahmed Zahaf",
+        "Mahmoud Bensaibi"
+      ],
+      "published": "2026-09-01",
+      "source": "openalex",
+      "doi": "https://doi.org/10.5459/bnzsee.1776",
+      "claims": [
+        {
+          "claim": "The researchers applied the Analytic Hierarchy Process (AHP) to evaluate seismic vulnerability in construction projects.",
+          "paper_ids": [
+            "openalex:W7204952938"
+          ]
+        },
+        {
+          "claim": "The study found that human and organizational factors significantly influence overall vulnerability.",
+          "paper_ids": [
+            "openalex:W7204952938"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7203503432",
+      "reason": "This research develops a new type of sambungan replaceable with a locking mechanism that can localize damage to a structural fuse without compromising the seismic performance of the structure, which could lead to significant improvements in repairability and cost-effectiveness after earthquakes.",
+      "title": "Analisis perilaku sambungan replaceable dengan mekanisme kuncian dan sambungan konvensional pada Sistem Rangka Baja Pemikul Momen Khusus",
+      "paragraph": "Researchers developed a replaceable connection with a locking mechanism for the Special Moment-Resisting Frame (SMRF) system. They evaluated the connection's performance using numerical analysis and found that it achieved a maximum capacity of 1.015,7 kN, which is 92.94% higher than the conventional connection.",
+      "link": "https://doi.org/10.69693/ijmst.v4i3.13033",
+      "authors": [
+        "Luqman Baskara",
+        "M. Sigit Darmawan",
+        "Afif Navir Revani"
+      ],
+      "published": "2026-08-14",
+      "source": "openalex",
+      "doi": "https://doi.org/10.69693/ijmst.v4i3.13033",
+      "claims": [
+        {
+          "claim": "The researchers developed a replaceable connection with a locking mechanism for the Special Moment-Resisting Frame (SMRF) system.",
+          "paper_ids": [
+            "openalex:W7203503432"
+          ]
+        },
+        {
+          "claim": "The connection achieved a maximum capacity of 1.015,7 kN, which is 92.94% higher than the conventional connection.",
+          "paper_ids": [
+            "openalex:W7203503432"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    }
+  ]
+}

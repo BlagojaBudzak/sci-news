@@ -1,0 +1,187 @@
+{
+  "category": "quantum-machine-learning",
+  "date": "2026-09-07",
+  "entries": [
+    {
+      "id": "2609.03640v1",
+      "reason": "This paper introduces Coherent Quantum Learning (CQL), a training framework for quantum learning models where the model parameters are quantum degrees of freedom evolved under a Hamiltonian that encodes the loss function, potentially revolutionizing the way quantum machine learning models are trained.",
+      "title": "Quantum Hamiltonian Evolution for Coherent Quantum Learning",
+      "paragraph": "Researchers have introduced a new training framework for quantum learning models called Coherent Quantum Learning (CQL). In CQL, the model parameters are treated as quantum degrees of freedom that evolve under a Hamiltonian that encodes the loss function. This approach allows the model to learn without the need for classical optimization or gradient computation. The researchers demonstrate the effectiveness of CQL on binary classification and interferometric phase estimation tasks, showing that the evolved distribution peaks at the optimal parameters, matching gradient-based performance.",
+      "link": "http://arxiv.org/abs/2609.03640v1",
+      "authors": [
+        "Ignacio B. Acedo",
+        "Javier Gonzalez-Conde",
+        "Pablo Rodriguez-Grasa",
+        "Barry C. Sanders",
+        "Lirandë Pira"
+      ],
+      "published": "2026-09-03",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.03640v1",
+      "claims": [
+        {
+          "claim": "CQL is a training framework for quantum learning models where the model parameters are treated as quantum degrees of freedom.",
+          "paper_ids": [
+            "2609.03640v1"
+          ]
+        },
+        {
+          "claim": "CQL allows the model to learn without classical optimization or gradient computation.",
+          "paper_ids": [
+            "2609.03640v1"
+          ]
+        },
+        {
+          "claim": "CQL can match gradient-based performance on binary classification and interferometric phase estimation tasks.",
+          "paper_ids": [
+            "2609.03640v1"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "2609.05251v1",
+      "reason": "This paper presents a unified reinforcement-learning (RL) framework that discovers compact parametrized quantum circuits (PQCs) for data-scarce device modeling, achieving the lowest mean absolute error (MAE) on all 11 targets versus six classical baselines.",
+      "title": "A Unified Physics-Aware Quantum Machine Learning Framework across Power GaN HEMTs and Logic Nanowire FETs",
+      "paragraph": "Researchers have developed a unified reinforcement-learning framework that discovers compact parametrized quantum circuits for data-scarce device modeling. The framework uses a graph neural network policy optimized by proximal policy optimization to search circuit architectures. The researchers demonstrate the effectiveness of the framework on two device datasets, achieving the lowest mean absolute error compared to six classical baselines.",
+      "link": "http://arxiv.org/abs/2609.05251v1",
+      "authors": [
+        "Rushat Rai",
+        "Yun-Yuan Wang",
+        "Autsada Kakaen",
+        "Pei-Jie Chang",
+        "Doan Viet Nguyen",
+        "Yuan-Chieh Chiu",
+        "Doldet Tantraviwat",
+        "Niall Tumilty",
+        "Simon See",
+        "Wen-Jay Lee",
+        "Tai-Yue Li",
+        "Nan-Yow Chen",
+        "Tian-Li Wu"
+      ],
+      "published": "2026-09-04",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.05251v1",
+      "claims": [
+        {
+          "claim": "The framework uses a graph neural network policy optimized by proximal policy optimization to search circuit architectures.",
+          "paper_ids": [
+            "2609.05251v1"
+          ]
+        },
+        {
+          "claim": "The framework achieves the lowest mean absolute error compared to six classical baselines on two device datasets.",
+          "paper_ids": [
+            "2609.05251v1"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "2609.05313v1",
+      "reason": "This paper integrates state-of-the-art satellite imagery with quantum machine learning on IonQ trapped-ion-based quantum processors, substantially improving change detection on sparse real-world images.",
+      "title": "SAR and InSAR Change Detection with Quantum Generative Models",
+      "paragraph": "Researchers have integrated state-of-the-art satellite imagery with quantum machine learning on IonQ trapped-ion-based quantum processors. They replaced the empirical conditional with a quantum circuit Born machine (QCBM)-sampled generative model in Copula space, improving change detection on sparse real-world images. The researchers demonstrate the effectiveness of the generative estimator on Capella Space satellite image acquisitions, showing that it matches conventional methods when the observed statistics are adequate and substantially outperforms them when they are not.",
+      "link": "http://arxiv.org/abs/2609.05313v1",
+      "authors": [
+        "Samwel K. Sekwao",
+        "Shaunak De",
+        "Alexis Hocken",
+        "Scott Staniewicz",
+        "Evgeny Epifanovsky",
+        "Craig Stringham",
+        "Gordon Farquharson",
+        "Martin Roetteler",
+        "Panagiotis Kl. Barkoutsos",
+        "Jason Iaconis"
+      ],
+      "published": "2026-09-04",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.05313v1",
+      "claims": [
+        {
+          "claim": "The researchers integrated state-of-the-art satellite imagery with quantum machine learning on IonQ trapped-ion-based quantum processors.",
+          "paper_ids": [
+            "2609.05313v1"
+          ]
+        },
+        {
+          "claim": "The generative estimator matches conventional methods when the observed statistics are adequate and substantially outperforms them when they are not.",
+          "paper_ids": [
+            "2609.05313v1"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "2609.03220v1",
+      "reason": "This paper introduces discretization-aware fine-tuning (DAFT), a method that adapts a pre-trained chemical foundation model to produce representations that remain informative after quantization, addressing a key challenge in practical quantum machine learning.",
+      "title": "Discretization-Aware Fine-Tuning for Quantum Machine Learning with Chemical Foundation Models",
+      "paragraph": "Researchers have introduced discretization-aware fine-tuning (DAFT), a method that adapts a pre-trained chemical foundation model to produce representations that remain informative after quantization. DAFT reduces collision probability through a differentiable soft collision loss. The researchers demonstrate the effectiveness of DAFT on the blood-brain barrier penetration (BBBP) molecular property prediction benchmark, showing that it reduces collision counts by several orders of magnitude and improves quantum classification accuracy by more than 12 percentage points compared to a frozen backbone.",
+      "link": "http://arxiv.org/abs/2609.03220v1",
+      "authors": [
+        "Shunji Matsuura",
+        "Sonika Johri"
+      ],
+      "published": "2026-09-02",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.03220v1",
+      "claims": [
+        {
+          "claim": "DAFT adapts a pre-trained chemical foundation model to produce representations that remain informative after quantization.",
+          "paper_ids": [
+            "2609.03220v1"
+          ]
+        },
+        {
+          "claim": "DAFT reduces collision counts by several orders of magnitude on the BBBP molecular property prediction benchmark.",
+          "paper_ids": [
+            "2609.03220v1"
+          ]
+        },
+        {
+          "claim": "DAFT improves quantum classification accuracy by more than 12 percentage points compared to a frozen backbone on the BBBP molecular property prediction benchmark.",
+          "paper_ids": [
+            "2609.03220v1"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "2609.05060v1",
+      "reason": "This paper presents a case study of the impact of data loss in postprocessing on training and inference of quantum neural networks, highlighting the importance of careful postprocessing in quantum machine learning.",
+      "title": "Impact of Data Loss in Postprocessing on Training and Inference of Quantum Neural Networks",
+      "paragraph": "Researchers have investigated the impact of data loss in postprocessing on the training and inference of quantum neural networks. They found that the postprocessing method applies a filter that assumes measurement bit-strings are in virtual qubit space, leading to the loss of 85 to 99.6% of valid measurement shots on quantum hardware runs. The resulting probability vector is unnormalised, allowing distorted prediction and loss values to propagate through the model without an API-level warning.",
+      "link": "http://arxiv.org/abs/2609.05060v1",
+      "authors": [
+        "Soraya V. Panambalom",
+        "Edoardo Altamura",
+        "Nick Chancellor",
+        "Jonte R. Hance"
+      ],
+      "published": "2026-09-04",
+      "source": "arXiv",
+      "doi": "http://arxiv.org/abs/2609.05060v1",
+      "claims": [
+        {
+          "claim": "The postprocessing method applies a filter that assumes measurement bit-strings are in virtual qubit space.",
+          "paper_ids": [
+            "2609.05060v1"
+          ]
+        },
+        {
+          "claim": "The filter leads to the loss of 85 to 99.6% of valid measurement shots on quantum hardware runs.",
+          "paper_ids": [
+            "2609.05060v1"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    }
+  ]
+}

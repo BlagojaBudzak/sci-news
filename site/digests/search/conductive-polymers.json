@@ -1,0 +1,166 @@
+{
+  "category": "conductive-polymers",
+  "date": "2026-09-07",
+  "entries": [
+    {
+      "id": "openalex:W7203553022",
+      "reason": "This paper presents a novel dicationic ion-pair doping strategy that achieves both high thermoelectric performance and long-term stability in conducting polymers, a significant breakthrough in the field.",
+      "title": "Dicationic Ion-Pair Doping Enables Stable and High-Performing Conducting Polymers for Organic Thermoelectrics",
+      "paragraph": "Researchers have developed a new doping method for conducting polymers, which enables stable and high-performing thermoelectric materials. They used a dicationic ion-pair dopant, TAB-2TFSI, to improve the electrical conductivity and power factor of poly(3-hexylthiophene-2,5-diyl) (P3HT). The results show that TAB-2TFSI delivers the highest average electrical conductivity of 290 ± 30 S cm-1 and power factor of 40 ± 6 µW m-1 K-2, making P3HT one of the top high-performing isotropic doped polymer thermoelectrics ever reported.",
+      "link": "https://doi.org/10.1002/advs.77036",
+      "authors": [
+        "Juhyung Park",
+        "Shubhradip Guchait",
+        "T. P. Sinha",
+        "Cynthia Verduyckt",
+        "Vijitha Ignatious",
+        "Tzu‐Yi Yu",
+        "Heyi Xia",
+        "Altynay Kaidarova",
+        "Michael Ng",
+        "Siebe Detavernier",
+        "Martin Rosenthal",
+        "Maristella Alessio",
+        "Daniel Escudero",
+        "Guy Koeckelberghs",
+        "Francisco Molina‐Lopez"
+      ],
+      "published": "2026-08-15",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1002/advs.77036",
+      "claims": [
+        {
+          "claim": "The dicationic ion-pair dopant TAB-2TFSI improves the electrical conductivity of P3HT.",
+          "paper_ids": [
+            "openalex:W7203553022"
+          ]
+        },
+        {
+          "claim": "TAB-2TFSI delivers the highest average electrical conductivity of 290 ± 30 S cm-1 and power factor of 40 ± 6 µW m-1 K-2.",
+          "paper_ids": [
+            "openalex:W7203553022"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7204435006",
+      "reason": "This study demonstrates the potential of polyaniline as a conductive polymer to improve the efficiency and conductivity of perovskite solar cells, a promising application in renewable energy.",
+      "title": "Polyaniline as a Conductive Polymer and Its Role in Improving the Efficiency and Conductivity of Perovskite Solar Cells",
+      "paragraph": "Researchers have investigated the role of polyaniline as a conductive polymer in perovskite solar cells. They found that incorporating polyaniline into the transport layers improves the efficiency and conductivity of the cells. The results show that power conversion efficiency increased by 17.5% with graphene oxide and by 36.8% with reduced graphene oxide, and short-circuit current density improved by 9.8% and 23.1%, respectively.",
+      "link": "https://doi.org/10.48550/arxiv.2608.24924",
+      "authors": [
+        "Mehran Hosseinzadeh Dizaj"
+      ],
+      "published": "2026-08-18",
+      "source": "openalex",
+      "doi": "https://doi.org/10.48550/arxiv.2608.24924",
+      "claims": [
+        {
+          "claim": "Incorporating polyaniline into the transport layers improves the efficiency and conductivity of perovskite solar cells.",
+          "paper_ids": [
+            "openalex:W7204435006"
+          ]
+        },
+        {
+          "claim": "Power conversion efficiency increased by 17.5% with graphene oxide and by 36.8% with reduced graphene oxide.",
+          "paper_ids": [
+            "openalex:W7204435006"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7204769415",
+      "reason": "This research investigates the effect of polypyrrole concentration on the gas sensing performance of electrospun nanofibers, providing valuable insights into the design of sensitive and selective gas sensors.",
+      "title": "The Effect of Polypyrrole Concentration Prepared by Electrospinning Nanofibers on NH3 Gas Sensing Performance",
+      "paragraph": "Researchers have investigated the effect of polypyrrole concentration on the gas sensing performance of electrospun nanofibers. They found that the optimal polypyrrole concentration is 0.05 wt%, which provides the greatest sensitivity and fastest response and relaxation times. The results show that the fibers presented reversible and repeatable chemiresistive cycles characteristic of p-type materials.",
+      "link": "https://doi.org/10.29072/vrp9dh05",
+      "authors": [
+        "Hussein A. Hussein",
+        "Ali Abdullah"
+      ],
+      "published": "2026-08-31",
+      "source": "openalex",
+      "doi": "https://doi.org/10.29072/vrp9dh05",
+      "claims": [
+        {
+          "claim": "The optimal polypyrrole concentration for gas sensing performance is 0.05 wt%.",
+          "paper_ids": [
+            "openalex:W7204769415"
+          ]
+        },
+        {
+          "claim": "The fibers presented reversible and repeatable chemiresistive cycles characteristic of p-type materials.",
+          "paper_ids": [
+            "openalex:W7204769415"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7203972458",
+      "reason": "This paper presents a novel approach to stabilizing negative capacitance materials, which could lead to significant advancements in energy storage and low-power electronics.",
+      "title": "Stabilization of Negative Capacitance by a Copper-Based Polymer and Sodium Polyacrylate-Derived Conductive Polymer Hydrogel for Rapid Charge-Discharge Supercapacitor",
+      "paragraph": "Researchers have developed a new material for rapid charge-discharge supercapacitors, which stabilizes negative capacitance. They used a copper-based polymer and sodium polyacrylate-derived conductive polymer hydrogel to improve the capacitance and stability of the material. The results show that the hybrid maintains nearly constant capacitance for up to 96 h under ambient conditions without encapsulation.",
+      "link": "https://doi.org/10.1021/acsapm.6c02673",
+      "authors": [
+        "Nishtha Chaturvedi",
+        "Devendra Kumar",
+        "Subramanian Krishnamoorthi",
+        "Subrato Bhattacharya"
+      ],
+      "published": "2026-08-21",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1021/acsapm.6c02673",
+      "claims": [
+        {
+          "claim": "The copper-based polymer and sodium polyacrylate-derived conductive polymer hydrogel improves the capacitance and stability of negative capacitance materials.",
+          "paper_ids": [
+            "openalex:W7203972458"
+          ]
+        },
+        {
+          "claim": "The hybrid maintains nearly constant capacitance for up to 96 h under ambient conditions without encapsulation.",
+          "paper_ids": [
+            "openalex:W7203972458"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7205014475",
+      "reason": "This study proposes a comprehensive methodology for the calibration, reconstruction, and overheating warning of three-dimensional temperature fields inside conductive polymer gels, a critical issue in the development of advanced materials and devices.",
+      "title": "Detection, Reconstruction, and Overheating Warning of Three-Dimensional Dynamic Temperature Fields Inside Conductive Polymer Gels",
+      "paragraph": "Researchers have developed a new method for detecting and reconstructing three-dimensional dynamic temperature fields inside conductive polymer gels. They used a focused light-field infrared camera to acquire infrared light-field images and reconstruct the temperature field. The results show that the method can detect overheating and provide early warning signals.",
+      "link": "https://doi.org/10.3390/polym18172141",
+      "authors": [
+        "Jiachen Zhang",
+        "K. Ni",
+        "Xiangfu Wang"
+      ],
+      "published": "2026-09-02",
+      "source": "openalex",
+      "doi": "https://doi.org/10.3390/polym18172141",
+      "claims": [
+        {
+          "claim": "The method can detect overheating and provide early warning signals.",
+          "paper_ids": [
+            "openalex:W7205014475"
+          ]
+        },
+        {
+          "claim": "The method uses a focused light-field infrared camera to acquire infrared light-field images and reconstruct the temperature field.",
+          "paper_ids": [
+            "openalex:W7205014475"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    }
+  ]
+}
