@@ -37,6 +37,7 @@ class ClaimAssessment(BaseModel):
     paper_ids: List[str] = Field(default_factory=list)
     verdict: Verdict
     justification: str = ""
+    evidence_type: str = "abstract"  # always abstract for now
 
 
 class FactCheckReport(BaseModel):
@@ -62,6 +63,7 @@ def _validate_claim_ids(claims: List[Claim], valid_ids: Set[str]) -> tuple[List[
                     paper_ids=claim.paper_ids,
                     verdict="INVALID_CITATION",
                     justification=f"Referenced paper ID(s) not found: {invalid}",
+                    evidence_type="abstract",
                 )
             )
         else:
@@ -100,6 +102,7 @@ def _parse_fact_check_output(raw: str, valid_claims: List[Claim]) -> FactCheckRe
                         paper_ids=item.get("paper_ids", []),
                         verdict="NOT_CHECKABLE",
                         justification="Fact-checker returned an assessment for an unrecognized claim.",
+                        evidence_type="abstract",
                     )
                 )
                 continue
@@ -112,6 +115,7 @@ def _parse_fact_check_output(raw: str, valid_claims: List[Claim]) -> FactCheckRe
                     paper_ids=claims_by_text[claim_text],
                     verdict=verdict,
                     justification=item.get("justification", ""),
+                    evidence_type="abstract",
                 )
             )
         # Ensure all valid claims are assessed; if missing, mark NOT_CHECKABLE.
@@ -124,6 +128,7 @@ def _parse_fact_check_output(raw: str, valid_claims: List[Claim]) -> FactCheckRe
                         paper_ids=claim.paper_ids,
                         verdict="NOT_CHECKABLE",
                         justification="Fact-checker did not provide an assessment for this claim.",
+                        evidence_type="abstract",
                     )
                 )
         overall = _compute_overall_status(assessments)
@@ -137,6 +142,7 @@ def _parse_fact_check_output(raw: str, valid_claims: List[Claim]) -> FactCheckRe
                 paper_ids=c.paper_ids,
                 verdict="NOT_CHECKABLE",
                 justification=f"Failed to parse fact-checker output: {e}",
+                evidence_type="abstract",
             )
             for c in valid_claims
         ]
@@ -223,6 +229,8 @@ def _build_fact_check_prompt(claims: List[Claim], evidence: List[Dict]) -> str:
     evidence_json = json.dumps(evidence, ensure_ascii=False)
     return f"""You are a scientific fact-checker. Your job is to evaluate each claim against the provided paper abstracts.
 
+IMPORTANT: All evidence supplied consists of paper abstracts only. Your verdicts reflect abstract-level support, not full-paper verification.
+
 Evidence papers (JSON array):
 {evidence_json}
 
@@ -257,4 +265,15 @@ def build_revision_feedback(report: FactCheckReport) -> str:
         lines.append(f"- Claim: \"{a.claim}\" (paper IDs: {a.paper_ids})")
         lines.append(f"  Verdict: {a.verdict}")
         lines.append(f"  Reason: {a.justification}")
+    lines.append(
+        "\nWhen revising, strictly follow these rules:\n"
+        "- Do NOT introduce new facts.\n"
+        "- Do NOT introduce new numbers.\n"
+        "- Do NOT introduce new papers.\n"
+        "- Do NOT introduce unsupported applications or implications.\n"
+        "- Remove unsupported details.\n"
+        "- If something is NOT_CHECKABLE because the abstract lacks sufficient evidence, "
+        "remove the unsupported specificity or rewrite it so that it is directly supported by the abstract.\n"
+        "- Every claim must remain traceable to the supplied abstract."
+    )
     return "\n".join(lines)
