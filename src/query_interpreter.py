@@ -238,6 +238,10 @@ text, explanations, or markdown.
         "messages": [{"role": "user", "content": prompt}],
         "temperature": OLLAMA_TEMPERATURE,
         "stream": False,
+        # Force the model's sampler to emit only valid JSON. This uses
+        # Ollama's grammar-constrained decoding and effectively eliminates
+        # the "missing comma" class of failures we saw with qwen3:4b.
+        "response_format": {"type": "json_object"},
     }
 
     try:
