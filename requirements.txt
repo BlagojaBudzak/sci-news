@@ -14,3 +14,4 @@ fastapi
 uvicorn[standard]
 httpx
 pytest
+requests>=2.31.0
