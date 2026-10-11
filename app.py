@@ -76,7 +76,7 @@ DUPLICATE_SUPPRESSION_WINDOW_SECONDS = int(
 # CORS: production origin unless overridden
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 if ENVIRONMENT == "production":
-    DEFAULT_CORS_ORIGINS = ["https://BLAGOJABUDZAK.github.io"]
+    DEFAULT_CORS_ORIGINS = ["https://blagojabudzak.github.io"]
 else:
     DEFAULT_CORS_ORIGINS = ["*"]
 
