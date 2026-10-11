@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import re
+import logging
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -98,9 +99,9 @@ def research(
     save_outputs: bool = True,
     job_id: str | None = None,
 ) -> ResearchResult:
-    trace = PipelineTrace.start(f"search:{query}", job_id=job_id)
-    category_for_prompt = f"search results for '{query}'"
     slug = _slug_from_query(query)
+    trace = PipelineTrace.start(f"search_{slug}", job_id=job_id)
+    category_for_prompt = f"search results for '{query}'"
 
     # Helper to save trace only once, respecting save_outputs
     trace_saved = False
@@ -208,6 +209,17 @@ def research(
                 status="no_candidates",
                 trace_path=trace_path,
             )
+        # Prefer original research: if we have enough non-review candidates,
+        # drop review-type papers before the reviewer sees them. This is
+        # deterministic — the reviewer LLM's soft prompt instruction alone
+        # was not sufficient.
+        logger = logging.getLogger(__name__)
+        REVIEW_TYPES = {"review", "editorial", "erratum"}
+        non_reviews = [c for c in candidates if (c.get("type") or "").lower() not in REVIEW_TYPES]
+        if len(non_reviews) >= 5:
+            dropped = len(candidates) - len(non_reviews)
+            logger.info("prefilter: dropped %d review-type candidate(s) before reviewer", dropped)
+            candidates = non_reviews
 
         # 4. Reviewer
         if verbose:

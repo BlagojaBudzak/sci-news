@@ -145,7 +145,7 @@ def test_cors_production_origin(monkeypatch):
     import importlib
     importlib.reload(app_module)
     # Now CORS_ORIGINS should be the GitHub Pages origin
-    assert app_module.CORS_ORIGINS == ["https://BLAGOJABUDZAK.github.io"]
+    assert app_module.CORS_ORIGINS == ["https://blagojabudzak.github.io"]
     # Clean up: revert reload by re-importing original (or set env back and reload)
     monkeypatch.setenv("ENVIRONMENT", "development")
     importlib.reload(app_module)

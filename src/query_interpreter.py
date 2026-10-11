@@ -46,8 +46,8 @@ class QueryPlan(BaseModel):
         description="Map of negative prefilter keywords to relevance weights (0.5-3.0).",
     )
     lookback_days: int = Field(
-        default=7,
-        description="How far back to search, in days (1-60).",
+        default=60,
+        description="How far back to search, in days (1-365).",
     )
 
 
@@ -61,7 +61,7 @@ MAX_NEGATIVE_KEYWORDS = 10
 MIN_WEIGHT = 0.5
 MAX_WEIGHT = 3.0
 MIN_LOOKBACK_DAYS = 1
-MAX_LOOKBACK_DAYS = 60
+MAX_LOOKBACK_DAYS = 365
 GENERIC_NEGATIVE_KEYWORDS = {
     "review",
     "tutorial",
@@ -200,7 +200,10 @@ def _parse_llm_output(output: Any) -> dict:
 # ---------------------------------------------------------------------------
 def interpret_query(query: str, llm=None) -> QueryPlan:
     """Convert a free-form user query into a validated, sanitized QueryPlan."""
+    from datetime import date
+
     prompt = f"""
+    Today's date is {date.today().isoformat()}.
 You are a scientific search assistant. A user wants to see a digest of
 recent research on the following topic:
 
@@ -221,7 +224,10 @@ deterministic prefilter. The plan must include:
    down-weighted because they are often false positives for this topic.
    Use weights from 0.5 to 3.0.
 
-4. lookback_days: an integer from 1 to 60. Default 7 if unsure.
+4. lookback_days: an integer from 1 to 365.
+    - If the user's query contains an explicit time range (e.g. "last week",
+     "past month", "since 2020", "this year", "recent"), set this to match.
+    - Otherwise default to 60.
 
 Output only a JSON object with those four keys. Do not include any other
 text, explanations, or markdown.

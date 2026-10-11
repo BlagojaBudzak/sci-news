@@ -19,7 +19,18 @@ def test_sanitize_plan_caps_search_phrases():
     )
     sanitized = sanitize_plan(plan)
     assert len(sanitized.search_phrases) <= 10
-    assert sanitized.lookback_days == 60
+    assert sanitized.lookback_days == 100
+
+
+def test_sanitize_plan_clamps_lookback_to_max():
+    plan = QueryPlan(
+        search_phrases=["x"],
+        positive_keywords={},
+        negative_keywords={},
+        lookback_days=9999,
+    )
+    sanitized = sanitize_plan(plan)
+    assert sanitized.lookback_days == 365
 
 
 def test_sanitize_plan_deduplicates_phrases():

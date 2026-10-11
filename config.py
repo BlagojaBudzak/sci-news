@@ -2,8 +2,10 @@
 Central configuration for the query-driven Sci News research engine.
 """
 from pathlib import Path
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parent
+load_dotenv(ROOT / ".env")
 
 # Retrieval and prompt sizes
 MAX_PAPERS_PER_SOURCE = 10

@@ -1,0 +1,198 @@
+{
+  "query": "perovskite-solar-cells",
+  "date": "2026-10-11",
+  "entries": [
+    {
+      "id": "openalex:W7214162782",
+      "reason": "This paper reports a new strategy to regulate ion dynamics in perovskite solar cells using Prussian blue, achieving champion power conversion efficiencies of 26.1% and 26.9% in n-i-p and p-i-n devices, respectively.",
+      "title": "Prussian blue regulates ion dynamics in perovskite solar cells",
+      "paragraph": "Researchers have discovered that a lattice-matched Prussian blue scaffold can direct heterogeneous nucleation to produce highly oriented, strain-relaxed films in perovskite solar cells. This strategy yielded champion power conversion efficiencies of 26.1% (n-i-p) and 26.9% (p-i-n; 26.2% certified), scaling to 23.4% in 6-centimeter–by–6-centimeter minimodules and a certified 22.9% in 30-centimeter–by–30-centimeter submodules. The Prussian blue scaffold also suppressed A-site cation redistribution and the resulting electronic inhomogeneity under bias.",
+      "link": "https://doi.org/10.1126/science.aef5487",
+      "authors": [
+        "Fang Cao",
+        "Mengen Ma",
+        "Junjie Zhou",
+        "Fangwen Cheng",
+        "Zheng Dai",
+        "Linyuan Chen",
+        "Yu-Hao Hong",
+        "Di Tian",
+        "Shaoqi Zhan",
+        "Yu Chen",
+        "Pengfei An",
+        "Xin Li",
+        "Xinyu Lin",
+        "Zhenhuang Su",
+        "Xingyu Gao",
+        "Jianhao Yang",
+        "Xiaofeng Huang",
+        "Jun Yin",
+        "Jing Li",
+        "Hua Zhang",
+        "Xian‐Kui Wei",
+        "Zhiguo Qu",
+        "Chong Liu",
+        "Chenyi Yi",
+        "Yaohua Mai",
+        "Binghui Wu",
+        "Nanfeng Zheng"
+      ],
+      "published": "2026-09-24",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1126/science.aef5487",
+      "claims": [
+        {
+          "claim": "A lattice-matched Prussian blue scaffold can direct heterogeneous nucleation to produce highly oriented, strain-relaxed films in perovskite solar cells.",
+          "paper_ids": [
+            "openalex:W7214162782"
+          ]
+        },
+        {
+          "claim": "The Prussian blue scaffold suppressed A-site cation redistribution and the resulting electronic inhomogeneity under bias.",
+          "paper_ids": [
+            "openalex:W7214162782"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7214153586",
+      "reason": "This review provides a comprehensive overview of vacuum flash evaporation-assisted processing in perovskite photovoltaics, highlighting its potential to regulate film formation and achieve high-quality, uniform, and defect-controlled perovskite films.",
+      "title": "Vacuum Flash Evaporation‐Assisted Processing in Perovskite Photovoltaics",
+      "paragraph": "Vacuum flash evaporation (VFE)‐assisted processing has emerged as an effective strategy to regulate film formation in perovskite solar cells. This technique rapidly extracts solvents under low-pressure conditions, inducing instantaneous supersaturation and uniform nucleation. VFE processing has been shown to impact film microstructure, including grain growth, crystallographic orientation, defect suppression, carrier dynamics, and ion migration. Its applications in single‐junction and tandem devices are also highlighted.",
+      "link": "https://doi.org/10.1002/adfm.78450",
+      "authors": [
+        "Tongyu Wang",
+        "Cong Chen"
+      ],
+      "published": "2026-09-24",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1002/adfm.78450",
+      "claims": [
+        {
+          "claim": "Vacuum flash evaporation (VFE)‐assisted processing has emerged as an effective strategy to regulate film formation in perovskite solar cells.",
+          "paper_ids": [
+            "openalex:W7214153586"
+          ]
+        },
+        {
+          "claim": "VFE processing impacts film microstructure, including grain growth, crystallographic orientation, defect suppression, carrier dynamics, and ion migration.",
+          "paper_ids": [
+            "openalex:W7214153586"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7214939258",
+      "reason": "This paper presents a hybrid functional first-principles study on the structural, electronic, transport, and optical properties of Bi–Sr-codoped α-FAPbI3, revealing enhanced thermodynamic stability and improved carrier transport.",
+      "title": "Improving perovskite solar cell performance via Bi–Sr codoped FAPbI3: A hybrid functional first-principles study",
+      "paragraph": "Researchers have investigated the structural, electronic, transport, and optical properties of pristine, Bi-doped, Sr-doped, and Bi–Sr-codoped α-FAPbI3 using first-principles density functional theory calculations. The results indicate that Bi–Sr codoping provides a favorable balance between structural stability and electronic properties. The Bi–Sr codoped system exhibits a direct band gap of 1.77 eV, a significantly enhanced static dielectric constant of 19.83, and strong absorption coefficients on the order of 10^5 cm^-1 across the visible region.",
+      "link": "https://doi.org/10.1016/j.matchemphys.2026.133198",
+      "authors": [
+        "Pirapat Waritkraikul",
+        "Wanchai Pijitrojana",
+        "Wutthikrai Busayaporn",
+        "Wutthigrai Sailuam"
+      ],
+      "published": "2026-09-30",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1016/j.matchemphys.2026.133198",
+      "claims": [
+        {
+          "claim": "Bi–Sr codoping provides a favorable balance between structural stability and electronic properties.",
+          "paper_ids": [
+            "openalex:W7214939258"
+          ]
+        },
+        {
+          "claim": "The Bi–Sr codoped system exhibits a direct band gap of 1.77 eV.",
+          "paper_ids": [
+            "openalex:W7214939258"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7214934927",
+      "reason": "This paper introduces a new approach to designing perovskite precursor inks for dip-coated perovskite solar cells, achieving uniform thin films and improved performance through the use of NMP-dominant DMF:NMP formulations.",
+      "title": "Rational Design of Perovskite Precursor Inks for Dip-Coated Perovskite Solar Cells",
+      "paragraph": "Researchers have identified an NMP-dominant DMF:NMP (= 7:93 (vol%/vol%)) solvent system that enables uniform, pinhole-free perovskite films via dip-coating. The resulting devices exhibit power conversion efficiencies exceeding 25%, representing the highest reported performance for dip-coated perovskite solar cells. This work establishes an ink-design strategy for high-performance dip-coated perovskite solar cells, opening a practical pathway toward perovskite photovoltaics on nonplanar and structurally diverse substrates.",
+      "link": "https://doi.org/10.1021/acsenergylett.6c02079",
+      "authors": [
+        "Eunji Hwang",
+        "Hajin Na",
+        "Myeongseung Kim",
+        "Nayoon Kwon",
+        "Juhwan Noh",
+        "Jin-Soo Kim",
+        "Young Yun Kim",
+        "Jongmin Park",
+        "Siyoung Q. Choi",
+        "Jangwon Seo"
+      ],
+      "published": "2026-09-30",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1021/acsenergylett.6c02079",
+      "claims": [
+        {
+          "claim": "The NMP-dominant DMF:NMP (= 7:93 (vol%/vol%)) solvent system enables uniform, pinhole-free perovskite films via dip-coating.",
+          "paper_ids": [
+            "openalex:W7214934927"
+          ]
+        },
+        {
+          "claim": "The resulting devices exhibit power conversion efficiencies exceeding 25%.",
+          "paper_ids": [
+            "openalex:W7214934927"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    },
+    {
+      "id": "openalex:W7214302296",
+      "reason": "This paper demonstrates that superior performance in FAPbI3-based perovskite solar cells is dictated by a principle of balanced coordination strength, revealing a fundamental understanding of how coordination chemistry governs crystallization and performance.",
+      "title": "Balanced Coordination Chemistry for Architecture-Universal Perovskite Solar Cells",
+      "paragraph": "Researchers have demonstrated that superior performance in FAPbI3-based perovskite solar cells is dictated by a principle of balanced coordination strength. Through systematic investigation of a representative panel of structurally diverse molecules, they reveal that an intermediate Lewis basicity, striking a balance between excessively strong and weak coordination, establishes a thermodynamically and kinetically favorable pathway that promotes the formation of the α-phase while effectively suppressing defect formation. This “balanced coordination” strategy yields high-quality perovskite films and enables universal high performance across both n-i-p and p-i-n architectures.",
+      "link": "https://doi.org/10.1021/jacs.6c14275",
+      "authors": [
+        "Xiangru Zhao",
+        "Qingyun He",
+        "Junbo Wang",
+        "Lei Li",
+        "Mengzhu Ding",
+        "Qiushuang Tian",
+        "Shuaijun Yan",
+        "Zhixian Sun",
+        "Mengyang Wu",
+        "Chongyu Zhong",
+        "Tianshi Qin",
+        "Wei Huang",
+        "Renzhi Li",
+        "Fangfang Wang"
+      ],
+      "published": "2026-09-25",
+      "source": "openalex",
+      "doi": "https://doi.org/10.1021/jacs.6c14275",
+      "claims": [
+        {
+          "claim": "Superior performance in FAPbI3-based perovskite solar cells is dictated by a principle of balanced coordination strength.",
+          "paper_ids": [
+            "openalex:W7214302296"
+          ]
+        },
+        {
+          "claim": "An intermediate Lewis basicity, striking a balance between excessively strong and weak coordination, establishes a thermodynamically and kinetically favorable pathway.",
+          "paper_ids": [
+            "openalex:W7214302296"
+          ]
+        }
+      ],
+      "verification_status": "PASS"
+    }
+  ]
+}

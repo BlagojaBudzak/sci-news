@@ -138,6 +138,7 @@ def _papers_for_prompt(papers: List[Dict], abstract_chars: int) -> str:
         {
             "id": p["id"],
             "title": p["title"],
+            "type": p.get("type", ""),
             "abstract": p["abstract"][:abstract_chars],
         }
         for p in papers
@@ -153,7 +154,10 @@ def _build_reviewer(llm: LLM, category: str) -> Agent:
         role="Senior Science Editor",
         goal=(
             f"Select the 5 most impactful, novel, or broadly interesting new "
-            f"{category} papers from this week's preprint feed."
+            f"{category} papers from this week's preprint feed. "
+            "Strongly prefer papers presenting original results — experiments, "
+            "measurements, methods, or theory. Avoid reviews, surveys, tutorials, "
+            "editorials, and perspective pieces unless nothing else is available."
         ),
         backstory=(
             "You've spent 15 years as an editor at a respected science "
@@ -240,6 +244,11 @@ def _build_write_task(
         "- Avoid unexplained jargon where possible.\n"
         "- Use the exact paper ID provided in the input.\n"
         "- Do not invent or modify paper IDs.\n"
+        "- When the abstract contains specific numerical results (percentages, "
+        "efficiencies, temperatures, time scales, concentrations, material "
+        "properties), include the actual numbers. Do not round them or replace "
+        "them with vague words like 'high', 'significant', or 'improved'.\n"
+        "- If the abstract does not contain a number, do not invent one.\n"
         "- Do not discuss any paper other than the ones listed above.\n\n"
         "Additionally, for each article, extract 1-3 concise factual claims "
         "that are directly supported by the abstract. Each claim must be:\n"

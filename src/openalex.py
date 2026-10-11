@@ -81,6 +81,7 @@ def normalize_openalex_work(work: dict) -> dict:
         "url": landing_url,
         "doi": doi,
         "source": "openalex",
+        "type": work.get("type") or "",  # "article" | "review" | "preprint" | ...
     }
 
 
