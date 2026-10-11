@@ -1,108 +1,199 @@
 # Sci News
 
-**An AI-powered science news and research blog.** Enter a topic or question and Sci News searches recent scientific literature, selects up to five relevant papers, and turns them into accessible blog summaries with links back to the original research.
+**An AI-powered science news blog built around real research.**
 
-The site is designed around free-form searches—not fixed categories.
+Enter a scientific topic or question—such as `perovskite solar cells`, `solid-state batteries`, or `CRISPR gene editing`—and Sci News searches scholarly literature, selects up to five relevant papers, and creates accessible summaries with links to the source publications.
 
-## How a search works
+Sci News is a learning project focused on building a grounded LLM application: retrieval, ranking, structured generation, validation, and a usable website.
+
+## How it works
 
 ```text
-User topic or question
-        ↓
-LLM creates a search plan
-        ↓
-OpenAlex + arXiv search
-        ↓
-Python deduplication and relevance filtering
-        ↓
-Science Editor selects up to 5 real papers
-        ↓
-Science Writer drafts one blog summary per paper
-        ↓
-Fact-checker checks claims against the available abstracts
-        ↓
-Python restores trusted metadata and source links
-        ↓
-Five-or-fewer article cards on the website
+Topic or question
+       |
+       v
+LLM query planner
+(search phrases, relevance terms, time window)
+       |
+       +-------------------+
+       |                   |
+       v                   v
+    OpenAlex             arXiv
+       |                   |
+       +---------+---------+
+                 |
+                 v
+     Python deduplication and filtering
+                 |
+                 v
+      Prefer original research when possible
+                 |
+                 v
+        Science Editor selects up to 5
+                 |
+                 v
+        Science Writer drafts summaries
+                 |
+                 v
+      Fact-check claims against abstracts
+                 |
+                 v
+   Python restores trusted paper metadata/URLs
+                 |
+                 v
+     JSON digest + website article cards
 ```
 
-The LLM does not choose the final URLs or invent the metadata shown for a paper. Python matches generated drafts back to fetched records, and the pipeline records a trace for debugging. Abstract-based fact-checking is a useful safeguard, but it is not a substitute for reading the original paper.
+Python owns paper IDs, source metadata, deduplication, ranking, and final source links. The LLM does not get to invent the URLs attached to its generated summaries. Each run can also write a pipeline trace to help diagnose retrieval, parsing, and generation problems.
 
-## Project structure
+**The fact-checker is an additional safeguard, not proof of full-paper accuracy.** It evaluates claims against the abstracts retrieved for a search; it does not independently read every full paper.
 
-- `app.py` — FastAPI API with background research jobs and SQLite job persistence.
-- `src/engine.py` — the query-driven research pipeline.
-- `src/query_interpreter.py` — turns a natural-language topic into search phrases and filtering rules.
-- `src/openalex.py`, `src/arxiv.py` — literature retrieval.
-- `src/prefilter.py` — deterministic deduplication and candidate filtering.
-- `src/crew_setup.py` — structured reviewer and writer outputs.
-- `src/fact_checker.py` — claim validation against fetched abstracts.
-- `src/trace.py` — per-job pipeline traces.
-- `site/` — static HTML/CSS/JavaScript frontend.
-- `site/digests/search/` — pre-generated example digests used as a fast path.
-- `data/jobs.db`, `data/raw/`, `data/traces/` — local runtime state and debugging artifacts; these should not be committed.
+## Research window and retrieval limits
 
-## Run locally
+The query planner is instructed to use **60 days by default** and can propose a window of **1–365 days** when a different period is requested. The current window is LLM-proposed and then clamped by Python; deterministic interpretation of phrases such as “last week,” “past year,” and explicit dates is a useful next improvement.
 
-Requirements: Python, [Ollama](https://ollama.com/), and the model configured in `config.py` (currently `llama3.1:8b-instruct-q4_K_M`).
+A longer window does not mean the model reads every paper published during that period. Retrieval is intentionally bounded: the current engine requests up to 30 OpenAlex records and 10 arXiv records, then keeps at most 15 candidates for review. This makes searches manageable on a local machine, but it also means Sci News is a focused digest generator—not an exhaustive systematic-literature-review tool.
 
-Create a virtual environment and install dependencies:
-
-```bash
-python -m venv .venv
-# Windows PowerShell: .venv\Scripts\Activate.ps1
-# Linux/macOS: source .venv/bin/activate
-pip install -r requirements.txt
-ollama pull llama3.1:8b-instruct-q4_K_M
-```
-
-Start the API in one terminal:
-
-```bash
-uvicorn app:app --reload --port 8000
-```
-
-Serve the frontend from the repository root in a second terminal:
-
-```bash
-python -m http.server 8080 --directory site
-```
-
-Open [http://localhost:8080](http://localhost:8080), enter a topic, and submit a search. The frontend first checks for a pre-generated example digest; if one is not available, it submits a job to the API and polls for the result.
-
-You can also run a search from the terminal:
-
-```bash
-python main.py "sodium-ion batteries"
-# or
-python search.py "hydrogen storage"
-```
-
-The API exposes:
-- `GET /health` — liveness check.
-- `POST /research` with JSON such as `{"query":"hydrogen storage"}` — start a job.
-- `GET /research/{job_id}` — check job status and retrieve the result.
-
-Run automated tests with:
-
-```bash
-pip install -r requirements-dev.txt
-python -m pytest tests/ -v
-python -m pytest test_pipeline_logic.py -v
-```
-
-## Deployment status and limitations
-
-GitHub Pages serves only the static files in `site/`; it does **not** run the Python/FastAPI backend. The repository's current Pages workflow publishes the frontend, while the API currently defaults to `http://localhost:8000` for local development.
-
-That means arbitrary live searches work in a local setup as described above. To enable them for public visitors, deploy the FastAPI backend separately, set `site/config.js`'s `apiBaseUrl` to that backend's HTTPS URL, and configure the backend's `CORS_ORIGINS` environment variable to allow the GitHub Pages origin. Do not put secret API keys in frontend JavaScript: anything shipped to the browser is public.
-
-The API currently uses a single-process, thread-based job runner and local SQLite storage. It is intentionally a small learning-project architecture, not a distributed production job system. If public traffic becomes a goal, review request limits, abuse protection, process restarts, and hosting costs before opening the API to unrestricted use.
+The pipeline prefers original research where enough candidates are available. Review articles may still be selected when there are not enough suitable original-research candidates.
 
 ## Technology
 
-Python · FastAPI · CrewAI · Ollama · Pydantic · OpenAlex · arXiv · SQLite · HTML · CSS · Vanilla JavaScript
+- **Backend:** Python, FastAPI, SQLite
+- **LLM orchestration:** CrewAI, Pydantic
+- **Local inference:** Ollama
+- **Research sources:** OpenAlex and arXiv
+- **Frontend:** HTML, CSS, vanilla JavaScript
+- **Hosting:** GitHub Pages for the static frontend
 
-## Project goal
+## Run locally
 
-Sci News explores how to build a grounded LLM application around real scientific sources: retrieval, filtering, structured generation, validation, fact-checking, and a simple public-facing reading experience.
+### Requirements
+
+- Python 3.12 is the tested development environment.
+- [Ollama](https://ollama.com/) installed and running.
+- The model configured in `config.py` (currently `llama3.1:8b-instruct-q4_K_M`).
+
+### 1. Create an environment and install dependencies
+
+Windows PowerShell:
+
+```powershell
+python -m venv scivenv
+.\scivenv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt -r requirements-dev.txt
+ollama pull llama3.1:8b-instruct-q4_K_M
+```
+
+Linux/macOS:
+
+```bash
+python -m venv scivenv
+source scivenv/bin/activate
+python -m pip install -r requirements.txt -r requirements-dev.txt
+ollama pull llama3.1:8b-instruct-q4_K_M
+```
+
+If Ollama is already running, there is no need to start a second `ollama serve` process.
+
+### 2. Run a search from the terminal
+
+```powershell
+python search.py "perovskite solar cells"
+```
+
+The compatibility entry point also works:
+
+```powershell
+python main.py "hydrogen storage"
+```
+
+The search pipeline writes a dated Markdown digest under `data/digests/search/`, a JSON digest under `site/digests/search/`, and a trace under `data/traces/`. Local runtime files and generated Markdown/traces are ignored by Git; selected JSON examples in `site/digests/search/` are kept in the repository for the static-site fast path.
+
+### 3. Run the API and website
+
+Start FastAPI in one terminal:
+
+```powershell
+uvicorn app:app --reload --port 8000
+```
+
+Start the static frontend in a second terminal:
+
+```powershell
+python -m http.server 8080 --directory site
+```
+
+Open [http://localhost:8080](http://localhost:8080). Enter a topic and submit it. The page first checks whether a pre-generated digest for that query exists; if not, it submits a research job to FastAPI and polls for the result.
+
+The API currently exposes:
+
+| Method | Endpoint | Purpose |
+|---|---|---|
+| `GET` | `/health` | Liveness check |
+| `POST` | `/research` | Start a research job with JSON such as `{"query":"perovskite solar cells"}` |
+| `GET` | `/research/{job_id}` | Check job status and retrieve the result |
+
+FastAPI's interactive endpoint documentation is available at [http://localhost:8000/docs](http://localhost:8000/docs) while the backend is running.
+
+### Optional environment settings
+
+`config.py` loads a project-root `.env` file. Useful settings include:
+
+- `OLLAMA_BASE_URL` — Ollama endpoint; defaults to `http://localhost:11434`.
+- `OLLAMA_MODEL` — model used for query planning and CrewAI tasks.
+- `ENVIRONMENT` — use `production` to activate the production CORS default.
+- `CORS_ORIGINS` — comma-separated allowed origins; overrides the CORS default.
+- `SCI_NEWS_API_KEY` — optional API request gate. A key placed in public frontend JavaScript is not secret, so this does not by itself protect a publicly deployed API.
+
+## Tests
+
+Run the full automated test suite from the repository root:
+
+```powershell
+python -m pytest tests/ -v
+```
+
+The tests mock external retrieval and LLM calls where appropriate, so they validate pipeline and API logic without requiring a live Ollama inference for every test. Keep a separate live-search smoke test—such as `python search.py "perovskite solar cells"`—to verify that the external data sources and local model work together.
+
+## Deployment: important limitation
+
+GitHub Pages serves only the static files under `site/`. **It does not run Python or FastAPI.** The checked-in `site/config.js` defaults to `http://localhost:8000`, which is correct for local development.
+
+For public visitors to run new searches, the API must be deployed separately. Then:
+
+1. Set `site/config.js`'s `apiBaseUrl` to the deployed backend's HTTPS URL.
+2. Set `ENVIRONMENT=production` or configure `CORS_ORIGINS` to allow the exact GitHub Pages origin.
+3. Add sensible rate limits, queue bounds, abuse protection, and retention for generated jobs before exposing the API publicly.
+4. Do not put private API keys or credentials in frontend JavaScript.
+
+The API is currently a small, single-process learning-project backend with a thread-based job runner and local SQLite storage. It is not yet designed as a distributed or high-traffic service. A timed-out worker thread is not forcibly cancelled, so job-timeout handling should be hardened before public deployment.
+
+## Current priorities
+
+- Make date-range interpretation deterministic in Python, with a 60-day default and a one-year maximum.
+- Test selection behavior when fewer than five suitable papers are retrieved.
+- Improve timeout/job-state handling and public API limits before a public backend deployment.
+- Add a GitHub Actions workflow that runs the test suite on pushes and pull requests.
+- Keep the homepage's “recent digests” section current rather than relying on hard-coded dates.
+
+## Repository structure
+
+```text
+app.py                    FastAPI backend and job manager
+search.py                 Free-form search CLI
+main.py                   CLI compatibility entry point
+config.py                 Local model and runtime configuration
+src/
+  query_interpreter.py    LLM-generated search plan + sanitization
+  openalex.py             OpenAlex retrieval and normalization
+  arxiv.py                arXiv retrieval and normalization
+  prefilter.py            Deduplication, relevance scoring, filtering
+  crew_setup.py           Structured reviewer and writer agents
+  fact_checker.py         Abstract-based claim checking
+  engine.py               End-to-end research pipeline
+  digest_writer.py        Markdown and JSON output
+  trace.py                Pipeline observability
+tests/                    Automated tests
+site/                     Static frontend deployed to GitHub Pages
+```
+
