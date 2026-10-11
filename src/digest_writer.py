@@ -1,9 +1,9 @@
 """
-Output generation — turns a DigestOutput (validated Pydantic model from the
-crew) into two artifacts:
+Output generation for a query-specific research digest.
 
-  * data/digests/<category>_<date>.md   — a human-readable Markdown archive
-  * site/digests/<category>.json        — what the static site fetches
+Writes:
+  * data/digests/search/<query-slug>_<date>.md — a Markdown archive
+  * site/digests/search/<query-slug>.json — the frontend's static fast path
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from src.crew_setup import BlogEntry
 
 
 def write_digest(
-    category: str,
+    query_slug: str,
     entries: List[BlogEntry],
     data_digest_dir: Path,
     site_digest_dir: Path,
@@ -25,22 +25,22 @@ def write_digest(
     data_digest_dir.mkdir(parents=True, exist_ok=True)
     site_digest_dir.mkdir(parents=True, exist_ok=True)
 
-    # --- Markdown archive -------------------------------------------------
-    md_lines = [f"# Sci News — {category.title()} — {date_str}\n"]
-    for e in entries:
-        md_lines.append(f"## {e.title}\n")
-        md_lines.append(f"{e.paragraph}\n")
-        md_lines.append(f"**Read the paper:** [{e.link}]({e.link})\n")
-    md_path = data_digest_dir / f"{category}_{date_str}.md"
+    # Markdown archive
+    md_lines = [f"# Sci News — {query_slug.replace('-', ' ').title()} — {date_str}\n"]
+    for entry in entries:
+        md_lines.append(f"## {entry.title}\n")
+        md_lines.append(f"{entry.paragraph}\n")
+        md_lines.append(f"**Read the paper:** [{entry.link}]({entry.link})\n")
+    md_path = data_digest_dir / f"{query_slug}_{date_str}.md"
     md_path.write_text("\n".join(md_lines), encoding="utf-8")
 
-    # --- Site JSON ----------------------------------------------------------
+    # JSON consumed by the static frontend fallback
     payload = {
-        "category": category,
+        "query": query_slug,
         "date": date_str,
-        "entries": [e.model_dump() for e in entries],
+        "entries": [entry.model_dump() for entry in entries],
     }
-    json_path = site_digest_dir / f"{category}.json"
+    json_path = site_digest_dir / f"{query_slug}.json"
     json_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
 
     print(f"  wrote {md_path}")
