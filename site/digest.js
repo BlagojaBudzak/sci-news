@@ -1,55 +1,87 @@
 const container = document.getElementById("digest-container");
+const API_BASE_URL = (window.SCI_NEWS_CONFIG?.apiBaseUrl || "http://localhost:8000").replace(/\/+$/, "");
 
-// ---------------------------------------------------------------------------
-// API configuration (adjust for production)
-// ---------------------------------------------------------------------------
-const API_BASE_URL = "http://localhost:8000"; // change to your deployed backend
-const API_KEY = ""; // if backend requires X-API-Key, set it here
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[character]);
+}
+
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value || ""), window.location.href);
+    if (url.protocol === "http:" || url.protocol === "https:") return url.href;
+  } catch (_) {
+    // Invalid URLs are rendered as plain text instead of links.
+  }
+  return "";
+}
 
 function formatDate(iso) {
   if (!iso) return "";
-  const d = new Date(iso + "T00:00:00");
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const date = new Date(`${iso}T00:00:00`);
+  return Number.isNaN(date.getTime())
+    ? ""
+    : date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
 }
 
 function formatAuthors(authors) {
-  if (!authors || authors.length === 0) return "";
-  if (authors.length <= 3) return authors.join(", ");
-  return `${authors.slice(0, 3).join(", ")} et al.`;
+  if (!Array.isArray(authors) || authors.length === 0) return "";
+  const names = authors.slice(0, 3).join(", ");
+  return escapeHTML(authors.length <= 3 ? names : `${names} et al.`);
 }
 
 function renderEntries(entries, query, metaExtra = "") {
-  if (!entries || entries.length === 0) {
+  if (!Array.isArray(entries) || entries.length === 0) {
     container.innerHTML = `
       <div class="state-message">
-        <p>No digest found for “${query}”.</p>
-        <p>Try one of the examples from the homepage, or run the pipeline locally to generate this digest.</p>
+        <p>No matching research summaries were produced for “${escapeHTML(query)}”.</p>
+        <p>Try a more specific or broader topic, or choose one of the example searches on the homepage.</p>
       </div>
     `;
     return;
   }
 
-  const entriesHTML = entries.map((entry) => `
-    <article class="entry-card">
-      <div class="entry-header">
-        <h2 class="entry-title"><a href="${entry.link}" target="_blank" rel="noopener">${entry.title}</a></h2>
-        <span class="entry-source ${entry.source}">${entry.source}</span>
-      </div>
-      <p class="entry-authors">${formatAuthors(entry.authors)}</p>
-      <p class="entry-paragraph">${entry.paragraph}</p>
-      <div class="entry-footer">
-        <span>${formatDate(entry.published)}</span>
-        <a href="${entry.link}" target="_blank" rel="noopener" class="entry-link">Read the paper →</a>
-      </div>
-    </article>
-  `).join("");
+  const entriesHTML = entries.map((entry) => {
+    const title = escapeHTML(entry.title || "Untitled research");
+    const paragraph = escapeHTML(entry.paragraph || "");
+    const sourceText = escapeHTML(entry.source || "Research");
+    const sourceClass = String(entry.source || "research").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const published = escapeHTML(formatDate(entry.published));
+    const href = safeExternalUrl(entry.link);
+    const titleMarkup = href
+      ? `<a href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${title}</a>`
+      : title;
+    const linkMarkup = href
+      ? `<a href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer" class="entry-link">Read the paper →</a>`
+      : `<span class="entry-link">Source link unavailable</span>`;
+
+    return `
+      <article class="entry-card">
+        <div class="entry-header">
+          <h2 class="entry-title">${titleMarkup}</h2>
+          <span class="entry-source ${sourceClass}">${sourceText}</span>
+        </div>
+        <p class="entry-authors">${formatAuthors(entry.authors)}</p>
+        <p class="entry-paragraph">${paragraph}</p>
+        <div class="entry-footer">
+          <span>${published}</span>
+          ${linkMarkup}
+        </div>
+      </article>
+    `;
+  }).join("");
 
   container.innerHTML = `
     <div class="digest-header">
-      <h1>${query}</h1>
+      <h1>${escapeHTML(query)}</h1>
       <div class="digest-meta">
-        <span>${metaExtra || ""}</span>
-        <span>${entries.length} selected papers</span>
+        <span>${escapeHTML(metaExtra)}</span>
+        <span>${entries.length} research summaries</span>
       </div>
     </div>
     <div class="entry-list">
@@ -61,9 +93,9 @@ function renderEntries(entries, query, metaExtra = "") {
 function showError(query, message) {
   container.innerHTML = `
     <div class="state-message">
-      <p>Could not load the digest for “${query}”.</p>
-      <p>${message || "The file might not exist yet. Please try again later or run the pipeline."}</p>
-      <p><a href="/">← Back to search</a></p>
+      <p>Could not generate a digest for “${escapeHTML(query)}”.</p>
+      <p>${escapeHTML(message || "Please try again later.")}</p>
+      <p><a href="./">← Back to search</a></p>
     </div>
   `;
 }
@@ -72,117 +104,103 @@ function showLoading(message) {
   container.innerHTML = `
     <div class="digest-loading">
       <div class="spinner"></div>
-      <p class="loading-message">${message}</p>
+      <p class="loading-message">${escapeHTML(message)}</p>
     </div>
   `;
 }
 
-// ---------------------------------------------------------------------------
-// Static file loading (existing pre-generated digests)
-// ---------------------------------------------------------------------------
-async function loadStaticDigest(slug, query) {
-  const res = await fetch(`digests/search/${slug}.json?_=${Date.now()}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+async function loadStaticDigest(slug) {
+  const response = await fetch(`digests/search/${encodeURIComponent(slug)}.json?_=${Date.now()}`);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  return response.json();
 }
 
-// ---------------------------------------------------------------------------
-// API interaction (new dynamic searches)
-// ---------------------------------------------------------------------------
 async function startResearchJob(query) {
-  const headers = { "Content-Type": "application/json" };
-  if (API_KEY) headers["X-API-Key"] = API_KEY;
-
   const response = await fetch(`${API_BASE_URL}/research`, {
     method: "POST",
-    headers,
-    body: JSON.stringify({ query }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query })
   });
 
   if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.detail || `API error ${response.status}`);
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || `API error ${response.status}`);
   }
-  const data = await response.json();
-  return data.job_id;
+  return response.json();
 }
 
 async function pollJob(jobId) {
-  const headers = {};
-  if (API_KEY) headers["X-API-Key"] = API_KEY;
-
-  const response = await fetch(`${API_BASE_URL}/research/${jobId}`, { headers });
+  const response = await fetch(`${API_BASE_URL}/research/${encodeURIComponent(jobId)}`);
   if (!response.ok) {
-    const errData = await response.json().catch(() => ({}));
-    throw new Error(errData.detail || `API error ${response.status}`);
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || `API error ${response.status}`);
   }
-  return await response.json();
+  return response.json();
 }
 
 async function loadDigest() {
   const params = new URLSearchParams(window.location.search);
-  const query = params.get("q") || "";
-  const slug = query.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  const query = (params.get("q") || "").trim();
+  const slug = query.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 
   if (!slug) {
-    window.location.href = "/";
+    window.location.href = "./";
     return;
   }
 
   const loadingMessages = [
     "Reading the literature…",
     "Finding relevant research…",
-    "Preparing your digest…",
+    "Preparing your digest…"
   ];
-  let msgIndex = 0;
-  showLoading(loadingMessages[msgIndex]);
-  const interval = setInterval(() => {
-    msgIndex = (msgIndex + 1) % loadingMessages.length;
-    const msgEl = document.querySelector(".loading-message");
-    if (msgEl) msgEl.textContent = loadingMessages[msgIndex];
-  }, 1500);
+  let messageIndex = 0;
+  showLoading(loadingMessages[messageIndex]);
+  const messageTimer = setInterval(() => {
+    messageIndex = (messageIndex + 1) % loadingMessages.length;
+    const message = document.querySelector(".loading-message");
+    if (message) message.textContent = loadingMessages[messageIndex];
+  }, 1800);
 
   try {
-    // 1. Try to load a pre-generated static digest (fast path)
+    // Pre-generated examples load immediately without requiring the API.
     try {
-      const staticDigest = await loadStaticDigest(slug, query);
-      clearInterval(interval);
-      renderEntries(staticDigest.entries, query, formatDate(staticDigest.date));
+      const digest = await loadStaticDigest(slug);
+      renderEntries(digest.entries, query, formatDate(digest.date));
       return;
-    } catch (staticErr) {
-      // Static file not found; continue to API
+    } catch (_) {
+      // No static copy exists; continue to live research.
     }
 
-    // 2. Static file missing → start a new research job via API
-    const jobId = await startResearchJob(query);
+    const created = await startResearchJob(query);
     let jobData;
-    const maxAttempts = 100; // approx 5 minutes with 3s polling
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      jobData = await pollJob(jobId);
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      jobData = await pollJob(created.job_id);
+
+      if (jobData.status === "failed") {
+        throw new Error(jobData.error || "The research job failed.");
+      }
+
       if (jobData.status === "completed") {
-        clearInterval(interval);
-        // The API result contains `result.digest_entries` and `result.verification_status`
-        const entries = jobData.result?.digest_entries || [];
-        const meta = jobData.result?.verification_status
-          ? `Verification: ${jobData.result.verification_status}`
+        const result = jobData.result || {};
+        if (result.status && result.status !== "completed") {
+          throw new Error(result.error || `The search finished with status: ${result.status}.`);
+        }
+        const entries = result.digest_entries || [];
+        const verification = result.verification_status
+          ? `Fact-check: ${result.verification_status}`
           : "";
-        renderEntries(entries, query, meta);
-        return;
-      } else if (jobData.status === "failed") {
-        clearInterval(interval);
-        showError(query, jobData.error || "Research job failed.");
+        renderEntries(entries, query, verification);
         return;
       }
-      // Still queued or running; wait and poll again
+
       await new Promise((resolve) => setTimeout(resolve, 3000));
     }
 
-    // Timeout
-    clearInterval(interval);
-    showError(query, "The research job is taking too long. Please try again later.");
-  } catch (err) {
-    clearInterval(interval);
-    showError(query, err.message || "An unexpected error occurred.");
+    throw new Error("The research job is taking too long. Please try again later.");
+  } catch (error) {
+    showError(query, error?.message || "An unexpected error occurred.");
+  } finally {
+    clearInterval(messageTimer);
   }
 }
 
