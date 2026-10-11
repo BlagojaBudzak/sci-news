@@ -1,9 +1,18 @@
+# Python
+.venv/
 scivenv/
 __pycache__/
-*.pyc
-data/raw/
-.env
-/scivenv/
+*.py[cod]
 
-scivenv/
-scivenv/
+# Local configuration and IDE files
+.env
+.idea/
+
+# Generated runtime data (not source files)
+data/raw/
+data/traces/
+data/jobs.db
+data/digests/trace/
+data/digests/search/
+
+# Keep pre-generated example digests committed under site/digests/search/.
