@@ -76,7 +76,7 @@ DUPLICATE_SUPPRESSION_WINDOW_SECONDS = int(
 # CORS: production origin unless overridden
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
 if ENVIRONMENT == "production":
-    DEFAULT_CORS_ORIGINS = ["https://BLAGOJABUDZAK.github.io"]
+    DEFAULT_CORS_ORIGINS = ["https://blagojabudzak.github.io"]
 else:
     DEFAULT_CORS_ORIGINS = ["*"]
 
@@ -288,7 +288,7 @@ app.add_middleware(
     allow_origins=CORS_ORIGINS,
     allow_credentials=False,
     allow_methods=["GET", "POST"],
-    allow_headers=["X-API-Key"],
+    allow_headers=["Content-Type", "X-API-Key"],
 )
 
 # ---------------------------------------------------------------------------
