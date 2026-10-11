@@ -13,6 +13,7 @@ Example usage:
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import List, Optional, Dict, Any
 
@@ -71,10 +72,8 @@ def _parse_output(crew_output, model_type):
 
 
 def _slug_from_query(query: str) -> str:
-    slug = "".join(
-        c.lower() if c.isalnum() or c == "-" else "-"
-        for c in query
-    ).strip("-")
+    """Use the same ASCII slug rules as the browser's static-digest lookup."""
+    slug = re.sub(r"[^a-z0-9]+", "-", query.lower()).strip("-")
     return slug[:80] or "search"
 
 
