@@ -65,7 +65,7 @@ JOB_TIMEOUT_SECONDS = int(os.getenv("JOB_TIMEOUT_SECONDS", "300"))
 # Concurrency control (thread-safe, used across worker threads)
 _semaphore = threading.Semaphore(MAX_CONCURRENT_RESEARCH)
 
-# Rate limiting defaults (high enough for local development and tests)
+# Conservative single-process defaults; override with environment variables.
 RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
 RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "30"))
 MAX_QUEUED_JOBS = int(os.getenv("MAX_QUEUED_JOBS", "10"))
