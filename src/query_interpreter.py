@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from typing import Any
 
 import requests
@@ -87,6 +88,68 @@ GENERIC_NEGATIVE_KEYWORDS = {
     "perspective",
     "opinion",
 }
+
+DEFAULT_LOOKBACK_DAYS = 60
+_NUMBER_WORDS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5,
+    "six": 6, "seven": 7, "eight": 8, "nine": 9, "ten": 10,
+    "a": 1, "an": 1, "few": 3, "several": 5,
+}
+_UNIT_DAYS = {"day": 1, "week": 7, "month": 30, "quarter": 90, "year": 365}
+
+
+def deterministic_lookback_days(query: str, today: date | None = None) -> int:
+    """Parse common time expressions deterministically; cap all searches at one year.
+
+    Older "since YYYY" requests are capped at 365 days because both sources
+    are queried through a bounded lookback-days interface.
+    """
+    today = today or date.today()
+    normalized = " ".join(str(query).lower().split())
+
+    since_match = re.search(r"\b(?:since|from)\s+(19\d{2}|20\d{2})\b", normalized)
+    if since_match:
+        start = date(int(since_match.group(1)), 1, 1)
+        if start > today:
+            return DEFAULT_LOOKBACK_DAYS
+        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+
+    if re.search(r"\b(?:year to date|so far this year|this year)\b", normalized):
+        start = date(today.year, 1, 1)
+        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+
+    if re.search(r"\bthis month\b", normalized):
+        start = date(today.year, today.month, 1)
+        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+
+    if re.search(r"\bthis week\b", normalized):
+        start = date.fromordinal(today.toordinal() - today.weekday())
+        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+
+    duration_match = re.search(
+        r"\b(?:last|past|previous|over the last|in the last)\s+"
+        r"(\d+|one|two|three|four|five|six|seven|eight|nine|ten|a|an|few|several)\s+"
+        r"(days?|weeks?|months?|quarters?|years?)\b",
+        normalized,
+    )
+    if duration_match:
+        amount_text, unit_text = duration_match.groups()
+        amount = int(amount_text) if amount_text.isdigit() else _NUMBER_WORDS[amount_text]
+        unit = unit_text.rstrip("s")
+        return min(max(amount * _UNIT_DAYS[unit], 1), MAX_LOOKBACK_DAYS)
+
+    singular_duration = re.search(
+        r"\b(?:last|past|previous)\s+(day|week|month|quarter|year)\b",
+        normalized,
+    )
+    if singular_duration:
+        return _UNIT_DAYS[singular_duration.group(1)]
+
+    if re.search(r"\b(?:today|last 24 hours?|past 24 hours?)\b", normalized):
+        return 1
+
+    return DEFAULT_LOOKBACK_DAYS
+
 
 def _clean_phrase(phrase: str) -> str:
     """Normalize a search phrase and keep only useful characters."""
@@ -224,10 +287,8 @@ deterministic prefilter. The plan must include:
    down-weighted because they are often false positives for this topic.
    Use weights from 0.5 to 3.0.
 
-4. lookback_days: an integer from 1 to 365.
-    - If the user's query contains an explicit time range (e.g. "last week",
-     "past month", "since 2020", "this year", "recent"), set this to match.
-    - Otherwise default to 60.
+4. lookback_days: use 60 as a placeholder. Python determines the actual
+   date window from the user's wording and overrides this field.
 
 Output only a JSON object with those four keys. Do not include any other
 text, explanations, or markdown.
@@ -257,8 +318,9 @@ text, explanations, or markdown.
         raise RuntimeError(f"Failed to call local LLM at {url}: {exc}") from exc
 
     parsed = _parse_llm_output(raw_output)
-    plan = QueryPlan.model_validate(parsed)
-    return sanitize_plan(plan)
+    plan = sanitize_plan(QueryPlan.model_validate(parsed))
+    # Do not trust a probabilistic model for a date filter.
+    return plan.model_copy(update={"lookback_days": deterministic_lookback_days(query)})
 
 
 if __name__ == "__main__":
