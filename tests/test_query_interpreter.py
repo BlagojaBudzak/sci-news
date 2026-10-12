@@ -1,9 +1,8 @@
 import json
 
-import pytest
-
 from datetime import date
-from unittest.mock import patch
+
+import pytest
 
 from src.query_interpreter import (
     QueryPlan,
