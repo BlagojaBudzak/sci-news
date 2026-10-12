@@ -356,7 +356,7 @@ def hydrate_digest_output(
 # Crews — one per phase
 # ---------------------------------------------------------------------------
 def build_review_crew(papers: List[Dict], category: str, llm: Optional[LLM] = None) -> Crew:
-    """Phase 1: the Reviewer looks at every candidate and picks 5."""
+    """Phase 1: the Reviewer selects up to five papers from the candidates."""
     if not papers:
         raise ValueError("build_review_crew() called with no papers to review")
 
@@ -378,8 +378,8 @@ def build_write_crew(
     llm: Optional[LLM] = None,
     feedback: Optional[str] = None,
 ) -> Crew:
-    """Phase 2: the Writer drafts blog entries for the 5 selected papers
-    only. Call `select_papers()` to produce `selected_papers` first.
+    """Phase 2: the Writer drafts entries for the selected papers only.
+    Call `select_papers()` to produce the selected papers first.
     """
     if not selected_papers:
         raise ValueError("build_write_crew() called with no selected papers")
