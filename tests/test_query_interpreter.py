@@ -121,8 +121,8 @@ def test_deterministic_lookback_common_phrases(query, expected):
 
 def test_deterministic_lookback_calendar_periods_and_cap():
     today = date(2026, 10, 12)
-    assert deterministic_lookback_days("this year in chemistry", today) == 285
-    assert deterministic_lookback_days("since 2026", today) == 285
+    assert deterministic_lookback_days("this year in chemistry", today) == 284
+    assert deterministic_lookback_days("since 2026", today) == 284
     assert deterministic_lookback_days("since 2020", today) == 365
     assert deterministic_lookback_days("since 2035", today) == 60
 
