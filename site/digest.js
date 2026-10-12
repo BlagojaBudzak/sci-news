@@ -1,5 +1,21 @@
 const container = document.getElementById("digest-container");
 const API_BASE_URL = (window.SCI_NEWS_CONFIG?.apiBaseUrl || "http://localhost:8000").replace(/\/+$/, "");
+const STATIC_DIGEST_TTL_DAYS = 14;
+const PINNED_STATIC_DIGESTS = new Set([
+  "crispr-gene-editing",
+  "hydrogen-storage",
+  "perovskite-solar-cells",
+  "sodium-ion-batteries"
+]);
+
+function isStaticDigestUsable(digest, slug) {
+  // Homepage examples remain available without a backend; other snapshots expire.
+  if (PINNED_STATIC_DIGESTS.has(slug)) return true;
+  const date = new Date(String(digest?.date || "") + "T00:00:00Z");
+  if (Number.isNaN(date.getTime())) return false;
+  const ageDays = (Date.now() - date.getTime()) / 86400000;
+  return ageDays >= -1 && ageDays <= STATIC_DIGEST_TTL_DAYS;
+}
 
 function escapeHTML(value) {
   return String(value ?? "").replace(/[&<>"']/g, (character) => ({
@@ -162,11 +178,14 @@ async function loadDigest() {
   }, 1800);
 
   try {
-    // Pre-generated examples load immediately without requiring the API.
+    // Curated examples remain available offline. Other saved snapshots are
+    // used only while fresh; stale snapshots fall through to live research.
     try {
       const digest = await loadStaticDigest(slug);
-      renderEntries(digest.entries, query, formatDate(digest.date));
-      return;
+      if (isStaticDigestUsable(digest, slug)) {
+        renderEntries(digest.entries, query, formatDate(digest.date));
+        return;
+      }
     } catch (_) {
       // No static copy exists; continue to live research.
     }
