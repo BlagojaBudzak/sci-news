@@ -139,7 +139,8 @@ def deterministic_lookback_days(query: str, today: date | None = None) -> int:
         return min(max(amount * _UNIT_DAYS[unit], 1), MAX_LOOKBACK_DAYS)
 
     singular_duration = re.search(
-        r"\b(?:last|past|previous)\s+(day|week|month|quarter|year)\b",
+        r"\b(?:last|past|previous|over the last|in the last)\s+"
+        r"(day|week|month|quarter|year)\b",
         normalized,
     )
     if singular_duration:
@@ -263,7 +264,6 @@ def _parse_llm_output(output: Any) -> dict:
 # ---------------------------------------------------------------------------
 def interpret_query(query: str, llm=None) -> QueryPlan:
     """Convert a free-form user query into a validated, sanitized QueryPlan."""
-    from datetime import date
 
     prompt = f"""
     Today's date is {date.today().isoformat()}.
