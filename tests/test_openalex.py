@@ -47,11 +47,10 @@ def test_fetch_openalex_logs_request_failure_and_falls_back(tmp_path, monkeypatc
     import src.openalex as openalex
 
     monkeypatch.setattr(openalex, "RAW_DIR", tmp_path)
-    monkeypatch.setattr(
-        openalex.requests,
-        "get",
-        lambda *args, **kwargs: (_ for _ in ()).throw(requests.ConnectionError("offline")),
-    )
+    def fail_request(*args, **kwargs):
+        raise requests.ConnectionError("offline")
+
+    monkeypatch.setattr(openalex.requests, "get", fail_request)
 
     with caplog.at_level(logging.WARNING, logger="src.openalex"):
         papers = fetch_openalex_papers(
