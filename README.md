@@ -163,7 +163,7 @@ For public visitors to run new searches, the API must be deployed separately. Th
 
 1. Set `site/config.js`'s `apiBaseUrl` to the deployed backend's HTTPS URL.
 2. Set `ENVIRONMENT=production` or configure `CORS_ORIGINS` to allow the exact GitHub Pages origin.
-3. Add sensible rate limits, queue bounds, abuse protection, and retention for generated jobs before exposing the API publicly.
+3. Review and tune the built-in rate/queue/retention limits; add a proper API gateway or reverse proxy, stronger abuse protection, monitoring, and a process-based worker supervisor before exposing the API publicly.
 4. Do not put private API keys or credentials in frontend JavaScript.
 
 The API is currently a small, single-process learning-project backend with a thread-based job runner and local SQLite storage. It is not a distributed or high-traffic service. Timeouts mark queued/running jobs as failed, and a late worker cannot overwrite that terminal state; Python cannot forcibly cancel a running thread, so timed-out work may continue consuming resources until it returns. Default in-memory admission limits are 10 requests/minute and 30 requests/hour per client IP, the queue is capped at 10, and terminal job history is pruned to a 24-hour retention period / 500 stored-job cap. These controls are basic single-process protections, not a substitute for a production API gateway.
