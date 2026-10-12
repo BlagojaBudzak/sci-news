@@ -55,6 +55,18 @@ def _validate_claim_ids(claims: List[Claim], valid_ids: Set[str]) -> tuple[List[
     invalid_assessments = []
     valid_claims = []
     for claim in claims:
+        if not claim.paper_ids:
+            invalid_assessments.append(
+                ClaimAssessment(
+                    claim=claim.claim,
+                    paper_ids=[],
+                    verdict="NOT_CHECKABLE",
+                    justification="No paper IDs were supplied, so this claim cannot be tied to an evidence abstract.",
+                    evidence_type="abstract",
+                )
+            )
+            continue
+
         invalid = [pid for pid in claim.paper_ids if pid not in valid_ids]
         if invalid:
             invalid_assessments.append(
@@ -181,11 +193,12 @@ def run_fact_check(
     invalid_assessments, valid_claims = _validate_claim_ids(all_claims, valid_ids)
 
     if not valid_claims:
-        # All claims had invalid IDs; no LLM call needed.
+        # No checkable claims remain; their individual assessments determine
+        # whether the result is FAIL (bad IDs) or PARTIAL (missing IDs).
         return FactCheckReport(
             assessments=invalid_assessments,
-            overall_status="FAIL",
-            summary="All claims referenced invalid paper IDs.",
+            overall_status=_compute_overall_status(invalid_assessments),
+            summary="No claims with usable paper-ID citations were available for checking.",
         )
 
     # Step 2: Prepare evidence and prompt
