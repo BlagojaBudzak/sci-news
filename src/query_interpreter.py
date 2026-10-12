@@ -12,7 +12,7 @@ The raw LLM plan is then sanitized by deterministic Python rules before it
 is returned to the caller. Python also builds the actual source-specific
 search strings from the plan.
 
-No changes are made to the existing category-based pipeline.
+This module is used by the dynamic free-text search pipeline; category-based CLI behavior is maintained separately.
 """
 
 from __future__ import annotations
