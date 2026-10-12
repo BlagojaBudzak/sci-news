@@ -383,19 +383,26 @@ def _run_research_sync(job_id: str, query: str) -> None:
                 job_id=job_id,
             )
             with job.lock:
-                if job.status != "failed":
+                # A timed-out job is terminal. Do not overwrite or re-persist it
+                # if the slow worker returns after retention cleanup.
+                if job.status in {"queued", "running"}:
                     job.result = result.model_dump()
                     job.verification_status = result.verification_status
-                    job.status = "completed"
+                    if result.status in {"failed", "fact_check_failed"}:
+                        job.status = "failed"
+                        job.error = result.error or f"Research ended with status: {result.status}"
+                    else:
+                        # no_papers/no_candidates are completed searches, not worker crashes.
+                        job.status = "completed"
                     job.completed_at = datetime.now(timezone.utc)
-                _save_job_to_db(job)
+                    _save_job_to_db(job)
         except Exception as exc:
             with job.lock:
-                if job.status != "failed":
+                if job.status in {"queued", "running"}:
                     job.status = "failed"
                     job.error = str(exc)
                     job.completed_at = datetime.now(timezone.utc)
-                _save_job_to_db(job)
+                    _save_job_to_db(job)
             logger.exception("Research job failed")
         finally:
             if job.timeout_timer is not None:
