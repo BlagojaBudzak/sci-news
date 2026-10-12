@@ -72,9 +72,9 @@ def test_validate_claim_ids_all_invalid():
 def test_validate_claim_ids_no_ids():
     claims = [make_claim("Claim without IDs", [])]
     invalid, valid = _validate_claim_ids(claims, {"paper1"})
-    # No IDs means no invalid IDs, but claim is considered valid (will be NOT_CHECKABLE later)
-    assert len(invalid) == 0
-    assert len(valid) == 1
+    assert len(invalid) == 1
+    assert invalid[0].verdict == "NOT_CHECKABLE"
+    assert len(valid) == 0
 
 # ---------------------------------------------------------------------------
 # Overall status computation
@@ -101,8 +101,8 @@ def test_compute_overall_status_fail_invalid():
     assessments = [ClaimAssessment(claim="c", paper_ids=["fake"], verdict="INVALID_CITATION", justification="bad id")]
     assert _compute_overall_status(assessments) == "FAIL"
 
-def test_compute_overall_status_empty():
-    assert _compute_overall_status([]) == "PASS"
+def test_compute_overall_status_empty_is_unverified():
+    assert _compute_overall_status([]) == "PARTIAL"
 
 # ---------------------------------------------------------------------------
 # LLM output parsing
@@ -167,11 +167,24 @@ def test_run_fact_check_all_invalid_ids(selected_papers, monkeypatch):
     assert len(report.assessments) == 1
     assert report.assessments[0].verdict == "INVALID_CITATION"
 
+def test_run_fact_check_claim_without_paper_ids_is_not_verified(selected_papers, monkeypatch):
+    writer_output = make_writer_output([
+        ("paper1", [make_claim("Claim without citation", [])])
+    ])
+    monkeypatch.setattr("src.fact_checker.get_local_llm", lambda: None)
+    report = run_fact_check(writer_output, selected_papers)
+
+    assert report.overall_status == "PARTIAL"
+    assert len(report.assessments) == 1
+    assert report.assessments[0].verdict == "NOT_CHECKABLE"
+
+
 def test_run_fact_check_no_claims(selected_papers, monkeypatch):
     writer_output = make_writer_output([("paper1", [])])
     monkeypatch.setattr("src.fact_checker.get_local_llm", lambda: None)
     report = run_fact_check(writer_output, selected_papers)
-    assert report.overall_status == "PASS"
+    assert report.overall_status == "PARTIAL"
+    assert "nothing could be verified" in report.summary.lower()
     assert len(report.assessments) == 0
 
 # ---------------------------------------------------------------------------

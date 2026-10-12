@@ -49,12 +49,24 @@ class FactCheckReport(BaseModel):
 def _validate_claim_ids(claims: List[Claim], valid_ids: Set[str]) -> tuple[List[ClaimAssessment], List[Claim]]:
     """
     Split claims into:
-      - invalid assessments (INVALID_CITATION) for those referencing IDs not in valid_ids.
-      - valid claims for the LLM to assess.
+      - prechecked assessments for missing IDs (NOT_CHECKABLE) or unknown IDs (INVALID_CITATION).
+      - claims with at least one known paper ID for the LLM to assess.
     """
     invalid_assessments = []
     valid_claims = []
     for claim in claims:
+        if not claim.paper_ids:
+            invalid_assessments.append(
+                ClaimAssessment(
+                    claim=claim.claim,
+                    paper_ids=[],
+                    verdict="NOT_CHECKABLE",
+                    justification="No paper IDs were supplied, so this claim cannot be tied to an evidence abstract.",
+                    evidence_type="abstract",
+                )
+            )
+            continue
+
         invalid = [pid for pid in claim.paper_ids if pid not in valid_ids]
         if invalid:
             invalid_assessments.append(
@@ -74,7 +86,7 @@ def _validate_claim_ids(claims: List[Claim], valid_ids: Set[str]) -> tuple[List[
 def _compute_overall_status(assessments: List[ClaimAssessment]) -> OverallStatus:
     """Determine overall status from the list of assessments."""
     if not assessments:
-        return "PASS"  # no claims -> nothing to fail
+        return "PARTIAL"  # an empty assessment set is unverified, not a pass
     if any(a.verdict in ["CONTRADICTED", "INVALID_CITATION", "UNSUPPORTED"] for a in assessments):
         return "FAIL"
     if any(a.verdict in ["PARTIALLY_SUPPORTED", "NOT_CHECKABLE"] for a in assessments):
@@ -171,17 +183,22 @@ def run_fact_check(
         all_claims.extend(article.claims)
 
     if not all_claims:
-        return FactCheckReport(assessments=[], overall_status="PASS", summary="No claims to verify.")
+        return FactCheckReport(
+            assessments=[],
+            overall_status="PARTIAL",
+            summary="No claims were supplied; nothing could be verified.",
+        )
 
     # Step 1: Validate IDs
     invalid_assessments, valid_claims = _validate_claim_ids(all_claims, valid_ids)
 
     if not valid_claims:
-        # All claims had invalid IDs; no LLM call needed.
+        # No checkable claims remain; their individual assessments determine
+        # whether the result is FAIL (bad IDs) or PARTIAL (missing IDs).
         return FactCheckReport(
             assessments=invalid_assessments,
-            overall_status="FAIL",
-            summary="All claims referenced invalid paper IDs.",
+            overall_status=_compute_overall_status(invalid_assessments),
+            summary="No claims with usable paper-ID citations were available for checking.",
         )
 
     # Step 2: Prepare evidence and prompt

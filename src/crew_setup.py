@@ -153,8 +153,9 @@ def _build_reviewer(llm: LLM, category: str) -> Agent:
     return Agent(
         role="Senior Science Editor",
         goal=(
-            f"Select the 5 most impactful, novel, or broadly interesting new "
-            f"{category} papers from this week's preprint feed. "
+            f"Select up to five of the most impactful, novel, or broadly interesting "
+            f"{category} papers in the supplied candidate set. "
+            "Select fewer only when fewer candidates are available. "
             "Strongly prefer papers presenting original results — experiments, "
             "measurements, methods, or theory. Avoid reviews, surveys, tutorials, "
             "editorials, and perspective pieces unless nothing else is available."
@@ -194,18 +195,20 @@ def _build_writer(llm: LLM) -> Agent:
 # ---------------------------------------------------------------------------
 def _build_review_task(papers: List[Dict], category: str, reviewer: Agent) -> Task:
     papers_json = _papers_for_prompt(papers, REVIEWER_ABSTRACT_CHARS)
+    target_count = min(5, len(papers))
+    paper_word = "paper" if target_count == 1 else "papers"
     return Task(
         description=(
-            f"Here are {len(papers)} recent {category} preprints as a JSON "
+            f"Here are {len(papers)} candidate {category} papers as a JSON "
             f"array of objects with 'id', 'title', and 'abstract':\n\n"
             f"{papers_json}\n\n"
-            "Pick exactly 5 papers that are most scientifically impactful, "
+            f"Pick exactly {target_count} {paper_word} that are most scientifically impactful, "
             "novel, or broadly interesting to an intelligent general "
             "audience. Give a one-sentence reason for each pick. Only use "
-            "ids that appear in the JSON above — never invent one."
+            "ids that appear in the JSON above — never invent one. Do not repeat an ID."
         ),
         expected_output=(
-            "A JSON object with a 'selected_papers' list of exactly 5 "
+            f"A JSON object with a 'selected_papers' list of exactly {target_count} "
             "items, each with 'id' and 'reason'."
         ),
         agent=reviewer,
@@ -226,7 +229,7 @@ def _build_write_task(
     # Base instructions for writing and claims
     description = (
         f"The Reviewer has already chosen the following {n} {category} "
-        "papers as this week's most interesting picks.\n\n"
+        "papers as the most interesting picks from this search.\n\n"
         f"Here are the papers you MUST write about:\n\n"
         f"{papers_json}\n\n"
         f"Write one clear, engaging, accurate paragraph of roughly "
@@ -295,7 +298,11 @@ def select_papers(papers: List[Dict], selection: ReviewerSelection) -> List[Dict
     """
     by_id = {p["id"]: p for p in papers}
     selected = []
+    seen_ids = set()
     for pick in selection.selected_papers:
+        if pick.id in seen_ids:
+            continue
+        seen_ids.add(pick.id)
         paper = by_id.get(pick.id)
         if paper is None:
             print(f"  ! reviewer picked an id not in the candidate set, skipping: {pick.id!r}")
@@ -315,8 +322,12 @@ def hydrate_digest_output(
     """Merges LLM draft articles back with Python ground-truth metadata (URL, Reason, ID, authors, source, etc.)."""
     by_id = {p["id"]: p for p in selected_papers}
     entries = []
+    seen_ids = set()
 
     for draft in writer_output.articles:
+        if draft.id in seen_ids:
+            continue
+        seen_ids.add(draft.id)
         paper = by_id.get(draft.id)
         if not paper:
             print(f"  ! Warning: could not match draft ID '{draft.id}' back to selected papers.")
@@ -345,7 +356,7 @@ def hydrate_digest_output(
 # Crews — one per phase
 # ---------------------------------------------------------------------------
 def build_review_crew(papers: List[Dict], category: str, llm: Optional[LLM] = None) -> Crew:
-    """Phase 1: the Reviewer looks at every candidate and picks 5."""
+    """Phase 1: the Reviewer selects up to five papers from the candidates."""
     if not papers:
         raise ValueError("build_review_crew() called with no papers to review")
 
@@ -367,8 +378,8 @@ def build_write_crew(
     llm: Optional[LLM] = None,
     feedback: Optional[str] = None,
 ) -> Crew:
-    """Phase 2: the Writer drafts blog entries for the 5 selected papers
-    only. Call `select_papers()` to produce `selected_papers` first.
+    """Phase 2: the Writer drafts entries for the selected papers only.
+    Call `select_papers()` to produce the selected papers first.
     """
     if not selected_papers:
         raise ValueError("build_write_crew() called with no selected papers")

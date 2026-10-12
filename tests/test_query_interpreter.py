@@ -1,5 +1,7 @@
 import json
 
+from datetime import date
+
 import pytest
 
 from src.query_interpreter import (
@@ -7,6 +9,8 @@ from src.query_interpreter import (
     sanitize_plan,
     build_openalex_query,
     build_arxiv_query,
+    deterministic_lookback_days,
+    interpret_query,
 )
 
 
@@ -96,3 +100,55 @@ def test_sanitize_plan_removes_generic_negative_keywords():
 
 
 # Keep old keyword sanitization tests if present; adapt as needed.
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        ("perovskite solar cells", 60),
+        ("recent advances in catalysis", 60),
+        ("papers from 2025 on catalysis", 60),
+        ("papers from the last week", 7),
+        ("papers published in the last week", 7),
+        ("studies over the last month", 30),
+        ("past 2 weeks on batteries", 14),
+        ("research from the past month", 30),
+        ("last 3 months of research", 90),
+        ("past year of CRISPR research", 365),
+        ("research today", 1),
+    ],
+)
+def test_deterministic_lookback_common_phrases(query, expected):
+    assert deterministic_lookback_days(query, today=date(2026, 10, 12)) == expected
+
+
+def test_deterministic_lookback_calendar_periods_and_cap():
+    today = date(2026, 10, 12)
+    assert deterministic_lookback_days("this year in chemistry", today) == 284
+    assert deterministic_lookback_days("since 2026", today) == 284
+    assert deterministic_lookback_days("since 2020", today) == 365
+    assert deterministic_lookback_days("since 2035", today) == 60
+
+
+def test_interpret_query_ignores_model_lookback_days(monkeypatch):
+    class FakeResponse:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "choices": [{
+                    "message": {
+                        "content": json.dumps({
+                            "search_phrases": ["perovskite solar cells"],
+                            "positive_keywords": {"perovskite": 2.0},
+                            "negative_keywords": {},
+                            "lookback_days": 7,
+                        })
+                    }
+                }]
+            }
+
+    monkeypatch.setattr("src.query_interpreter.requests.post", lambda *args, **kwargs: FakeResponse())
+    assert interpret_query("perovskite solar cells").lookback_days == 60
+    assert interpret_query("perovskite solar cells from the past week").lookback_days == 7

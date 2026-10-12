@@ -50,7 +50,7 @@ Python owns paper IDs, source metadata, deduplication, ranking, and final source
 
 ## Research window and retrieval limits
 
-The query planner is instructed to use **60 days by default** and can propose a window of **1–365 days** when a different period is requested. The current window is LLM-proposed and then clamped by Python; deterministic interpretation of phrases such as “last week,” “past year,” and explicit dates is a useful next improvement.
+Python now parses common time expressions deterministically: **60 days by default**, `last week` = 7 days, `past month` = 30 days, `past year` = 365 days, `this year` = year-to-date, and `since YYYY` = days since January 1 of that year. All windows are capped at 365 days, so older `since YYYY` requests search only the most recent year. The LLM proposes topical search phrases and keywords but cannot override Python's date-window decision.
 
 A longer window does not mean the model reads every paper published during that period. Retrieval is intentionally bounded: the current engine requests up to 30 OpenAlex records and 10 arXiv records, then keeps at most 15 candidates for review. This makes searches manageable on a local machine, but it also means Sci News is a focused digest generator—not an exhaustive systematic-literature-review tool.
 
@@ -123,7 +123,7 @@ Start the static frontend in a second terminal:
 python -m http.server 8080 --directory site
 ```
 
-Open [http://localhost:8080](http://localhost:8080). Enter a topic and submit it. The page first checks whether a pre-generated digest for that query exists; if not, it submits a research job to FastAPI and polls for the result.
+Open [http://localhost:8080](http://localhost:8080). Enter a topic and submit it. The page first checks a pinned example digest or a fresh saved snapshot (14-day freshness window); stale non-example snapshots fall through to live research. It then submits a research job to FastAPI and polls for the result.
 
 The API currently exposes:
 
@@ -163,18 +163,18 @@ For public visitors to run new searches, the API must be deployed separately. Th
 
 1. Set `site/config.js`'s `apiBaseUrl` to the deployed backend's HTTPS URL.
 2. Set `ENVIRONMENT=production` or configure `CORS_ORIGINS` to allow the exact GitHub Pages origin.
-3. Add sensible rate limits, queue bounds, abuse protection, and retention for generated jobs before exposing the API publicly.
+3. Review and tune the built-in rate/queue/retention limits; add a proper API gateway or reverse proxy, stronger abuse protection, monitoring, and a process-based worker supervisor before exposing the API publicly.
 4. Do not put private API keys or credentials in frontend JavaScript.
 
-The API is currently a small, single-process learning-project backend with a thread-based job runner and local SQLite storage. It is not yet designed as a distributed or high-traffic service. A timed-out worker thread is not forcibly cancelled, so job-timeout handling should be hardened before public deployment.
+The API is currently a small, single-process learning-project backend with a thread-based job runner and local SQLite storage. It is not a distributed or high-traffic service. Timeouts mark queued/running jobs as failed, and a late worker cannot overwrite that terminal state; Python cannot forcibly cancel a running thread, so timed-out work may continue consuming resources until it returns. Default in-memory admission limits are 10 requests/minute and 30 requests/hour per client IP, the queue is capped at 10, and terminal job history is pruned opportunistically when a new search is submitted, using a 24-hour retention period and a 500 stored-job cap. These controls are basic single-process protections, not a substitute for a production API gateway.
 
-## Current priorities
+## Known limitations and next improvements
 
-- Make date-range interpretation deterministic in Python, with a 60-day default and a one-year maximum.
-- Test selection behavior when fewer than five suitable papers are retrieved.
-- Improve timeout/job-state handling and public API limits before a public backend deployment.
-- Add a GitHub Actions workflow that runs the test suite on pushes and pull requests.
-- Keep the homepage's “recent digests” section current rather than relying on hard-coded dates.
+- The search window is capped at one year. Phrases such as `between 2020 and 2022` are not yet represented as exact start/end dates.
+- Search retrieval remains bounded (up to 30 OpenAlex and 10 arXiv records, then at most 15 candidates), so results are not exhaustive.
+- The reviewer and fact-checker use the same local model; abstract-level checking cannot establish full-paper accuracy.
+- A timed-out Python thread is marked failed but cannot be forcibly stopped. For public deployment, add a proper worker queue/process supervisor, stronger abuse controls, and monitoring.
+- GitHub Actions runs the automated suite on pushes and pull requests; a separate live smoke test still requires Ollama and working research-source access.
 
 ## Repository structure
 
@@ -184,7 +184,7 @@ search.py                 Free-form search CLI
 main.py                   CLI compatibility entry point
 config.py                 Local model and runtime configuration
 src/
-  query_interpreter.py    LLM-generated search plan + sanitization
+  query_interpreter.py    LLM topical plan + deterministic time window
   openalex.py             OpenAlex retrieval and normalization
   arxiv.py                arXiv retrieval and normalization
   prefilter.py            Deduplication, relevance scoring, filtering

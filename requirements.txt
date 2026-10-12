@@ -12,6 +12,4 @@ python-dotenv>=1.0.1
 
 fastapi
 uvicorn[standard]
-httpx
-pytest
 requests>=2.31.0

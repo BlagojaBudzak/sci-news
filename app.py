@@ -37,7 +37,7 @@ import sqlite3
 import threading
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
@@ -65,10 +65,12 @@ JOB_TIMEOUT_SECONDS = int(os.getenv("JOB_TIMEOUT_SECONDS", "300"))
 # Concurrency control (thread-safe, used across worker threads)
 _semaphore = threading.Semaphore(MAX_CONCURRENT_RESEARCH)
 
-# Rate limiting defaults (high enough for local development and tests)
-RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "1000"))
-RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "10000"))
-MAX_QUEUED_JOBS = int(os.getenv("MAX_QUEUED_JOBS", "1000"))
+# Conservative single-process defaults; override with environment variables.
+RATE_LIMIT_PER_MINUTE = int(os.getenv("RATE_LIMIT_PER_MINUTE", "10"))
+RATE_LIMIT_PER_HOUR = int(os.getenv("RATE_LIMIT_PER_HOUR", "30"))
+MAX_QUEUED_JOBS = int(os.getenv("MAX_QUEUED_JOBS", "10"))
+JOB_RETENTION_SECONDS = int(os.getenv("JOB_RETENTION_SECONDS", "86400"))
+MAX_STORED_JOBS = int(os.getenv("MAX_STORED_JOBS", "500"))
 DUPLICATE_SUPPRESSION_WINDOW_SECONDS = int(
     os.getenv("DUPLICATE_SUPPRESSION_WINDOW_SECONDS", "300")
 )
@@ -199,6 +201,8 @@ class JobInternal:
         self.started_at: Optional[datetime] = None
         self.completed_at: Optional[datetime] = None
         self.verification_status: Optional[str] = None
+        self.lock = threading.RLock()
+        self.timeout_timer: Optional[threading.Timer] = None
 
 JOBS: Dict[str, JobInternal] = {}
 
@@ -240,9 +244,54 @@ def _check_rate_limit(ip: str) -> None:
         _request_log.setdefault(ip, []).append(now)
         _hour_log.setdefault(ip, []).append(now)
 
+def _prune_jobs() -> None:
+    """Remove expired terminal jobs and cap persisted/in-memory history."""
+    cutoff = datetime.now(timezone.utc) - timedelta(seconds=JOB_RETENTION_SECONDS)
+    deleted_ids = set()
+    with _lock:
+        for job_id, job in list(JOBS.items()):
+            with job.lock:
+                if (
+                    job.status in {"completed", "failed"}
+                    and job.completed_at is not None
+                    and job.completed_at < cutoff
+                ):
+                    deleted_ids.add(job_id)
+                    del JOBS[job_id]
+
+        with _db_lock, contextlib.closing(_get_db_connection()) as conn:
+            expired = conn.execute(
+                "SELECT job_id FROM jobs WHERE status IN ('completed', 'failed') "
+                "AND completed_at IS NOT NULL AND completed_at < ?",
+                (cutoff.isoformat(),),
+            ).fetchall()
+            deleted_ids.update(row["job_id"] for row in expired)
+            conn.execute(
+                "DELETE FROM jobs WHERE status IN ('completed', 'failed') "
+                "AND completed_at IS NOT NULL AND completed_at < ?",
+                (cutoff.isoformat(),),
+            )
+            total = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
+            excess = max(0, total - MAX_STORED_JOBS)
+            if excess:
+                old_rows = conn.execute(
+                    "SELECT job_id FROM jobs WHERE status IN ('completed', 'failed') "
+                    "ORDER BY COALESCE(completed_at, created_at) ASC LIMIT ?",
+                    (excess,),
+                ).fetchall()
+                old_ids = [row["job_id"] for row in old_rows]
+                deleted_ids.update(old_ids)
+                conn.executemany("DELETE FROM jobs WHERE job_id = ?", [(job_id,) for job_id in old_ids])
+            conn.commit()
+
+        for job_id in deleted_ids:
+            JOBS.pop(job_id, None)
+
+
 def _check_duplicate_query(ip: str, query: str) -> None:
     """Raise HTTPException if the same query was submitted recently by this IP."""
-    query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
+    normalized_query = " ".join(query.lower().split())
+    query_hash = hashlib.sha256(normalized_query.encode("utf-8")).hexdigest()
     now = time.time()
     with _lock:
         ip_queries = _recent_queries.setdefault(ip, {})
@@ -310,17 +359,20 @@ def verify_api_key(x_api_key: Optional[str] = Header(default=None)) -> None:
 # Background job runner
 # ---------------------------------------------------------------------------
 def _run_research_sync(job_id: str, query: str) -> None:
-    """
-    Synchronous wrapper that runs the research engine under the semaphore.
-    This function is executed in its own daemon thread.
-    """
+    """Run research under the semaphore without allowing late workers to revive timed-out jobs."""
     job = JOBS.get(job_id)
     if job is None:
-        return   # Job may have been purged; do nothing.
+        return
+
     with _semaphore:
-        job.status = "running"
-        job.started_at = datetime.now(timezone.utc)
-        _save_job_to_db(job)
+        with job.lock:
+            # The watchdog may expire a job while it is queued behind the semaphore.
+            if job.status != "queued":
+                return
+            job.status = "running"
+            job.started_at = datetime.now(timezone.utc)
+            _save_job_to_db(job)
+
         try:
             llm = get_local_llm()
             result = engine.research(
@@ -330,25 +382,41 @@ def _run_research_sync(job_id: str, query: str) -> None:
                 save_outputs=True,
                 job_id=job_id,
             )
-            job.result = result.model_dump()
-            job.verification_status = result.verification_status
-            job.status = "completed"
+            with job.lock:
+                # A timed-out job is terminal. Do not overwrite or re-persist it
+                # if the slow worker returns after retention cleanup.
+                if job.status in {"queued", "running"}:
+                    job.result = result.model_dump()
+                    job.verification_status = result.verification_status
+                    if result.status in {"failed", "fact_check_failed"}:
+                        job.status = "failed"
+                        job.error = result.error or f"Research ended with status: {result.status}"
+                    else:
+                        # no_papers/no_candidates are completed searches, not worker crashes.
+                        job.status = "completed"
+                    job.completed_at = datetime.now(timezone.utc)
+                    _save_job_to_db(job)
         except Exception as exc:
-            job.status = "failed"
-            job.error = str(exc)
+            with job.lock:
+                if job.status in {"queued", "running"}:
+                    job.status = "failed"
+                    job.error = str(exc)
+                    job.completed_at = datetime.now(timezone.utc)
+                    _save_job_to_db(job)
             logger.exception("Research job failed")
         finally:
-            job.completed_at = datetime.now(timezone.utc)
-            _save_job_to_db(job)
+            if job.timeout_timer is not None:
+                job.timeout_timer.cancel()
+
 
 def _mark_job_timeout(job_id: str) -> None:
-    """
-    Mark a job as failed if it is still running after the timeout.
-    This does not cancel the underlying thread, but makes the job
-    visible as failed instead of staying in 'running' indefinitely.
-    """
+    """Mark queued/running jobs failed; the underlying Python thread cannot be forcibly cancelled."""
     job = JOBS.get(job_id)
-    if job and job.status == "running":
+    if job is None:
+        return
+    with job.lock:
+        if job.status not in {"queued", "running"}:
+            return
         job.status = "failed"
         job.error = f"Research job exceeded {JOB_TIMEOUT_SECONDS}s timeout"
         job.completed_at = datetime.now(timezone.utc)
@@ -370,6 +438,9 @@ async def create_research(
 
     client_ip = req.client.host if req.client else "unknown"
 
+    # Keep stored history bounded before applying admission limits.
+    _prune_jobs()
+
     # Rate limiting and duplicate suppression
     _check_rate_limit(client_ip)
     _check_duplicate_query(client_ip, query)
@@ -379,14 +450,15 @@ async def create_research(
     JOBS[job_id] = job
     _save_job_to_db(job)
 
-    # Start research in a daemon thread
-    thread = threading.Thread(target=_run_research_sync, args=(job_id, query), daemon=True)
-    thread.start()
-
-    # Set a timeout watchdog
+    # Start the watchdog before the worker to avoid a fast worker racing timer setup.
     timer = threading.Timer(JOB_TIMEOUT_SECONDS, _mark_job_timeout, args=(job_id,))
     timer.daemon = True
+    job.timeout_timer = timer
     timer.start()
+
+    # The worker checks that the job has not already timed out while queued.
+    thread = threading.Thread(target=_run_research_sync, args=(job_id, query), daemon=True)
+    thread.start()
 
     return JobCreateResponse(job_id=job_id, status="queued")
 
