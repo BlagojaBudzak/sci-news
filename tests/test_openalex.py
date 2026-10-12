@@ -39,3 +39,28 @@ def test_normalize_openalex_work():
 def test_fetch_openalex_no_config_returns_empty():
     config = {}  # no openalex block
     assert fetch_openalex_papers("physics", config) == []
+
+
+def test_fetch_openalex_logs_request_failure_and_falls_back(tmp_path, monkeypatch, caplog):
+    import logging
+    import requests
+    import src.openalex as openalex
+
+    monkeypatch.setattr(openalex, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(
+        openalex.requests,
+        "get",
+        lambda *args, **kwargs: (_ for _ in ()).throw(requests.ConnectionError("offline")),
+    )
+
+    with caplog.at_level(logging.WARNING, logger="src.openalex"):
+        papers = fetch_openalex_papers(
+            "search",
+            {"openalex": {"search_query": "test topic", "per_page": 10, "max_results": 5}},
+            use_cache=False,
+            search_query_override='"test topic"',
+        )
+
+    assert papers == []
+    assert "OpenAlex request failed" in caplog.text
+    assert "offline" in caplog.text
