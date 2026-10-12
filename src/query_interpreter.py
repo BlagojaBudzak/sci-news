@@ -107,7 +107,7 @@ def deterministic_lookback_days(query: str, today: date | None = None) -> int:
     today = today or date.today()
     normalized = " ".join(str(query).lower().split())
 
-    since_match = re.search(r"\b(?:since|from)\s+(19\d{2}|20\d{2})\b", normalized)
+    since_match = re.search(r"\bsince\s+(19\d{2}|20\d{2})\b", normalized)
     if since_match:
         start = date(int(since_match.group(1)), 1, 1)
         if start > today:
