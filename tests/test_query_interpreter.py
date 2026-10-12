@@ -108,6 +108,8 @@ def test_sanitize_plan_removes_generic_negative_keywords():
         ("perovskite solar cells", 60),
         ("recent advances in catalysis", 60),
         ("papers from the last week", 7),
+        ("papers published in the last week", 7),
+        ("studies over the last month", 30),
         ("past 2 weeks on batteries", 14),
         ("research from the past month", 30),
         ("last 3 months of research", 90),
