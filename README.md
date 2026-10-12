@@ -184,7 +184,7 @@ search.py                 Free-form search CLI
 main.py                   CLI compatibility entry point
 config.py                 Local model and runtime configuration
 src/
-  query_interpreter.py    LLM-generated search plan + sanitization
+  query_interpreter.py    LLM topical plan + deterministic time window
   openalex.py             OpenAlex retrieval and normalization
   arxiv.py                arXiv retrieval and normalization
   prefilter.py            Deduplication, relevance scoring, filtering
