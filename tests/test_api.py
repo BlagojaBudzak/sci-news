@@ -128,6 +128,42 @@ def test_background_research_failure(client, monkeypatch):
     assert "Simulated research failure" in job_data["error"]
 
 
+def test_engine_failure_status_is_reflected_by_job_status(client, monkeypatch):
+    def fact_check_rejected(*args, **kwargs):
+        return ResearchResult(
+            job_id=kwargs.get("job_id", "test"),
+            query=kwargs.get("query", "test"),
+            status="fact_check_failed",
+            error="Fact-check overall status is FAIL. No digest published.",
+        )
+
+    monkeypatch.setattr(api_app.engine, "research", fact_check_rejected)
+    response = client.post("/research", json={"query": "fact checker rejection"})
+    job_id = response.json()["job_id"]
+
+    job_data = _wait_for_status(client, job_id, "failed")
+    assert job_data["status"] == "failed"
+    assert job_data["result"]["status"] == "fact_check_failed"
+    assert "Fact-check" in job_data["error"]
+
+
+def test_no_papers_is_a_completed_search_not_a_worker_crash(client, monkeypatch):
+    def no_papers(*args, **kwargs):
+        return ResearchResult(
+            job_id=kwargs.get("job_id", "test"),
+            query=kwargs.get("query", "test"),
+            status="no_papers",
+        )
+
+    monkeypatch.setattr(api_app.engine, "research", no_papers)
+    response = client.post("/research", json={"query": "no papers found"})
+    job_id = response.json()["job_id"]
+
+    job_data = _wait_for_status(client, job_id, "completed")
+    assert job_data["status"] == "completed"
+    assert job_data["result"]["status"] == "no_papers"
+
+
 def test_api_key_required_when_configured(client, monkeypatch):
     monkeypatch.setenv("SCI_NEWS_API_KEY", "secret")
     importlib.reload(api_app)
