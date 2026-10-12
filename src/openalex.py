@@ -7,6 +7,7 @@ paper schema, and provides simple daily caching under data/raw/.
 
 import json
 import datetime
+import logging
 from config import DATA_RAW_DIR
 
 
@@ -15,6 +16,7 @@ import requests
 BASE_URL = "https://api.openalex.org/works"
 RAW_DIR = DATA_RAW_DIR
 USER_AGENT = "SciNews/0.1 (mailto:budzak.b@outlook.com)"
+logger = logging.getLogger(__name__)
 
 
 def _build_params(search_query: str, from_date: str, to_date: str, per_page: int) -> dict:
@@ -141,6 +143,7 @@ def fetch_openalex_papers(
 
         return [normalize_openalex_work(w) for w in results[:max_results]]
 
-    except Exception:
-        # OpenAlex failed – return empty list, secondary fetch will take over
+    except Exception as exc:
+        # Keep the fallback behavior, but do not silently hide source outages.
+        logger.warning("OpenAlex request failed; falling back to arXiv: %s", exc)
         return []
