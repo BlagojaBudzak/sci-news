@@ -49,8 +49,8 @@ class FactCheckReport(BaseModel):
 def _validate_claim_ids(claims: List[Claim], valid_ids: Set[str]) -> tuple[List[ClaimAssessment], List[Claim]]:
     """
     Split claims into:
-      - invalid assessments (INVALID_CITATION) for those referencing IDs not in valid_ids.
-      - valid claims for the LLM to assess.
+      - prechecked assessments for missing IDs (NOT_CHECKABLE) or unknown IDs (INVALID_CITATION).
+      - claims with at least one known paper ID for the LLM to assess.
     """
     invalid_assessments = []
     valid_claims = []
