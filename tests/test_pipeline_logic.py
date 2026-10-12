@@ -24,6 +24,9 @@ from src.crew_setup import (
     WriterOutput,
     hydrate_digest_output,
     select_papers,
+    _build_review_task,
+    _build_reviewer,
+    get_local_llm,
 )
 from src.trace import PipelineTrace
 
@@ -172,3 +175,42 @@ if __name__ == "__main__":
             print(f"FAIL  {name}")
             traceback.print_exc()
     print(f"\n{passed}/{len(tests)} passed")
+
+
+
+def test_select_papers_deduplicates_repeated_reviewer_ids():
+    selection = ReviewerSelection(selected_papers=[
+        SelectedPaper(id="2608.00001v1", reason="First reason."),
+        SelectedPaper(id="2608.00001v1", reason="Duplicate pick."),
+        SelectedPaper(id="2608.00002v1", reason="Second paper."),
+    ])
+    selected = select_papers(FIXTURE_PAPERS, selection)
+    assert [paper["id"] for paper in selected] == ["2608.00001v1", "2608.00002v1"]
+    assert selected[0]["reason"] == "First reason."
+
+
+def test_hydrate_digest_output_deduplicates_writer_ids():
+    selection = ReviewerSelection(selected_papers=[
+        SelectedPaper(id="2608.00001v1", reason="Novel result."),
+    ])
+    selected = select_papers(FIXTURE_PAPERS, selection)
+    writer_output = WriterOutput(articles=[
+        LLMDraftEntry(id="2608.00001v1", title="First", paragraph="First body."),
+        LLMDraftEntry(id="2608.00001v1", title="Duplicate", paragraph="Duplicate body."),
+    ])
+    digest = hydrate_digest_output(writer_output, selected)
+    assert len(digest.entries) == 1
+    assert digest.entries[0].title == "First"
+
+
+def test_reviewer_prompt_never_requests_more_papers_than_candidates():
+    for candidate_count in range(1, 5):
+        papers = [
+            {**FIXTURE_PAPERS[index % len(FIXTURE_PAPERS)], "id": f"candidate-{index}"}
+            for index in range(candidate_count)
+        ]
+        reviewer = _build_reviewer(get_local_llm(), "test science")
+        task = _build_review_task(papers, "test science", reviewer)
+        paper_word = "paper" if candidate_count == 1 else "papers"
+        assert f"Pick exactly {candidate_count} {paper_word}" in task.description
+        assert f"exactly {candidate_count}" in task.expected_output
