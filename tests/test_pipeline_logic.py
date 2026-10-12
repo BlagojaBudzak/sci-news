@@ -151,31 +151,6 @@ def test_pipeline_trace_save_writes_json(tmp_path):
     assert path.read_text().strip().startswith("{")
 
 
-if __name__ == "__main__":
-    # Allow running as a plain script if pytest isn't installed.
-    import inspect
-    import tempfile
-    import traceback
-
-    tests = [
-        (name, fn) for name, fn in list(globals().items())
-        if name.startswith("test_") and inspect.isfunction(fn)
-    ]
-    passed = 0
-    for name, fn in tests:
-        try:
-            if "tmp_path" in inspect.signature(fn).parameters:
-                with tempfile.TemporaryDirectory() as d:
-                    fn(Path(d))
-            else:
-                fn()
-            print(f"PASS  {name}")
-            passed += 1
-        except Exception:
-            print(f"FAIL  {name}")
-            traceback.print_exc()
-    print(f"\n{passed}/{len(tests)} passed")
-
 
 
 def test_select_papers_deduplicates_repeated_reviewer_ids():
@@ -214,3 +189,29 @@ def test_reviewer_prompt_never_requests_more_papers_than_candidates():
         paper_word = "paper" if candidate_count == 1 else "papers"
         assert f"Pick exactly {candidate_count} {paper_word}" in task.description
         assert f"exactly {candidate_count}" in task.expected_output
+
+
+if __name__ == "__main__":
+    # Allow running as a plain script if pytest isn't installed.
+    import inspect
+    import tempfile
+    import traceback
+
+    tests = [
+        (name, fn) for name, fn in list(globals().items())
+        if name.startswith("test_") and inspect.isfunction(fn)
+    ]
+    passed = 0
+    for name, fn in tests:
+        try:
+            if "tmp_path" in inspect.signature(fn).parameters:
+                with tempfile.TemporaryDirectory() as d:
+                    fn(Path(d))
+            else:
+                fn()
+            print(f"PASS  {name}")
+            passed += 1
+        except Exception:
+            print(f"FAIL  {name}")
+            traceback.print_exc()
+    print(f"\n{passed}/{len(tests)} passed")
