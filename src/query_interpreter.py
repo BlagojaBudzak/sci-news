@@ -112,19 +112,19 @@ def deterministic_lookback_days(query: str, today: date | None = None) -> int:
         start = date(int(since_match.group(1)), 1, 1)
         if start > today:
             return DEFAULT_LOOKBACK_DAYS
-        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+        return min(max((today - start).days, 1), MAX_LOOKBACK_DAYS)
 
     if re.search(r"\b(?:year to date|so far this year|this year)\b", normalized):
         start = date(today.year, 1, 1)
-        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+        return min(max((today - start).days, 1), MAX_LOOKBACK_DAYS)
 
     if re.search(r"\bthis month\b", normalized):
         start = date(today.year, today.month, 1)
-        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+        return min(max((today - start).days, 1), MAX_LOOKBACK_DAYS)
 
     if re.search(r"\bthis week\b", normalized):
         start = date.fromordinal(today.toordinal() - today.weekday())
-        return min(max((today - start).days + 1, 1), MAX_LOOKBACK_DAYS)
+        return min(max((today - start).days, 1), MAX_LOOKBACK_DAYS)
 
     duration_match = re.search(
         r"\b(?:last|past|previous|over the last|in the last)\s+"
